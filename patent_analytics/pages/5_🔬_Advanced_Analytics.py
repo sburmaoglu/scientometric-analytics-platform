@@ -407,7 +407,17 @@ with tab3:
             top_cited = df.nlargest(10, citation_col)[[title_cols[0], citation_col] + (year_cols if year_cols else [])]
             
             display_cols = ['Title', 'Citations'] + (['Year'] if year_cols else [])
-            top_cited.columns = display_cols
+            display_columns = ['Title', 'Citations']
+            if 'Year' in df.columns:
+                display_columns.append('Year')
+            if 'Authors' in df.columns:
+                display_columns.append('Authors')
+
+# Get top cited (only existing columns)
+top_cited = df.nlargest(10, 'Citations')[display_columns].copy()
+
+# Display directly - no column renaming needed
+st.dataframe(top_cited, use_container_width=True, hide_index=True)
             
             st.dataframe(top_cited, use_container_width=True, hide_index=True)
         
