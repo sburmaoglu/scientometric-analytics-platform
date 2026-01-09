@@ -536,107 +536,152 @@ def main():
         )
         
         if uploaded_file is not None:
-            # Process the file (your existing upload logic here)
-            # Import the lens_parser
-            try:
-                from utils.lens_parser import preprocess_lens_data, validate_lens_format
+    try:
+        with st.spinner("🔍 Analyzing and preprocessing file..."):
+            # Import parser
+            from utils.lens_parser import (
+                validate_lens_format, 
+                preprocess_lens_data,
+                get_available_fields
+            )
+            
+            # Read CSV
+            df_raw = pd.read_csv(uploaded_file)
+            
+            # Validate format - RETURNS DICT NOW
+            validation = validate_lens_format(df_raw)
+            
+            if not validation['is_valid']:
+                st.error(f"""
+                ❌ **Data validation failed!**
                 
-                with st.spinner("📊 Processing your data..."):
-                    # Read CSV
-                    df = pd.read_csv(uploaded_file)
+                {validation.get('message', 'Unknown error')}
+                
+                **Details:**
+                - Detection confidence: {validation.get('confidence', 0):.0%}
+                - Data type detected: {validation.get('data_type', 'Unknown')}
+                - Columns found: {len(df_raw.columns)}
+                
+                **Requirements:**
+                - Minimum 5 columns required
+                - Must contain: Title, Year, Citations (or similar)
+                - Recommended: Use lens.org export format
+                """)
+                
+                with st.expander("📋 Show Your File's Columns"):
+                    st.write(list(df_raw.columns))
+                
+                st.info("""
+                **💡 Tips:**
+                - Visit [lens.org](https://lens.org) and export data as CSV
+                - Make sure the file hasn't been modified
+                - Check that required columns exist
+                """)
+                
+            else:
+                # SUCCESS - Process the data
+                st.success(f"✅ {validation.get('message', 'Data loaded successfully!')}")
+                
+                with st.spinner("⚙️ Preprocessing data..."):
+                    # Preprocess with detected type
+                    processed_df, report = preprocess_lens_data(
+                        df_raw, 
+                        data_type=validation['data_type']
+                    )
+                
+                # Save to session state - USE DICT VALUES
+                st.session_state.df = processed_df
+                st.session_state.data_uploaded = True
+                st.session_state.file_name = uploaded_file.name
+                st.session_state.data_source = validation.get('source', 'unknown')
+                st.session_state.data_type = validation.get('data_type', 'unknown')
+                
+                # Show preprocessing report
+                with st.expander("📊 View Preprocessing Report"):
+                    st.markdown("### Detected Information")
+                    col1, col2, col3 = st.columns(3)
+                    with col1:
+                        st.metric("Data Type", validation['data_type'].title())
+                    with col2:
+                        st.metric("Confidence", f"{validation['confidence']:.0%}")
+                    with col3:
+                        st.metric("Source", validation['source'])
                     
-                    # Validate
-                    validation = validate_lens_format(df_raw)
-
-                    if not validation['is_valid']:
-                        st.error(f"""
-                        ❌ **This doesn't appear to be a lens.org file!**
-    
-                            {validation.get('message', 'Unknown error')}
-    
-                            **Detection confidence:** {validation.get('confidence', 0):.0%}
-                            **Data type detected:** {validation.get('data_type', 'Unknown')}
-    
-                            **Please ensure:**
-                            - File is exported directly from lens.org
-                            - Export format is CSV (not Excel or other)
-                            - File hasn't been modified after export
-                            - File contains at least 5 columns
-                            """)
-    
-             with st.expander("📋 Show Available Columns"):
-                st.write(list(df_raw.columns))
-                    if validation['is_valid']:
-                        # Preprocess
-                        processed_df, report = preprocess_lens_data(df)
-                        
-                        # Save to session state
-                        st.session_state.df = processed_df
-                        st.session_state.data_uploaded = True
-                        st.session_state.file_name = uploaded_file.name 
-                        st.session_state.data_source = validation.get('source', 'unknown')
-                        st.session_state.data_type = validation.get('data_type', 'unknown')
-                        
-                        # Success message
-                        st.success(f"✅ Successfully loaded {len(processed_df)} records!")
-                        
-                        # Show preprocessing report
-                        with st.expander("📋 View Preprocessing Report"):
-                            st.json(report)
-                        
-                        # Show data preview
-                        st.markdown("### 👀 Data Preview")
-                        st.dataframe(processed_df.head(10), use_container_width=True)
-                        
-                        # Quick stats
-                        col1, col2, col3, col4 = st.columns(4)
-                        with col1:
-                            st.metric("Total Records", f"{len(processed_df):,}")
-                        with col2:
-                            if 'Year' in processed_df.columns:
-                                years = processed_df['Year'].dropna()
-                                if len(years) > 0:
-                                    st.metric("Year Range", f"{int(years.min())}-{int(years.max())}")
-                        with col3:
-                            if 'Citations' in processed_df.columns:
-                                st.metric("Total Citations", f"{int(processed_df['Citations'].sum()):,}")
-                        with col4:
-                            st.metric("Data Type", validation.get('data_type', 'Unknown').title())
-                        
-                        # Navigation to analytics
-                        st.markdown("---")
-                        st.markdown("### 🎯 Ready to Analyze!")
-                        st.info("👈 Use the sidebar to navigate to analytics modules")
-                        
-                        # Quick navigation buttons
-                        st.markdown("#### Or click below to start:")
-                        col1, col2, col3, col4, col5 = st.columns(5)
-                        
-                        with col1:
-                            if st.button("📊 Descriptive", use_container_width=True, type="primary"):
-                                st.switch_page("pages/1_📊_Descriptive_Analytics.py")
-                        with col2:
-                            if st.button("🌐 Network", use_container_width=True):
-                                st.switch_page("pages/2_🌐_Network_Analysis.py")
-                        with col3:
-                            if st.button("💡 Semantic", use_container_width=True):
-                                st.switch_page("pages/3_💡_Semantic_Analysis.py")
-                        with col4:
-                            if st.button("📈 TRL", use_container_width=True):
-                                st.switch_page("pages/4_📈_TRL_Analysis.py")
-                        with col5:
-                            if st.button("🔬 Advanced", use_container_width=True):
-                                st.switch_page("pages/5_🔬_Advanced_Analytics.py")
+                    st.markdown("### Mapped Columns")
+                    for std_col, orig_col in report.get('mapped_columns', {}).items():
+                        st.write(f"✅ **{std_col}** ← `{orig_col}`")
                     
-                    else:
-                        st.error("❌ File validation failed")
-                        st.write(validation.get('message', 'Unknown error'))
-                        
-            except Exception as e:
-                st.error(f"❌ Error processing file: {str(e)}")
-                with st.expander("Technical Details"):
-                    st.code(str(e))
-    
+                    if report.get('generated_columns'):
+                        st.markdown("### Generated Columns")
+                        for col in report['generated_columns']:
+                            st.write(f"🔧 **{col}** (auto-generated)")
+                
+                # Show data preview
+                st.markdown("### 👀 Data Preview")
+                st.dataframe(processed_df.head(10), use_container_width=True)
+                
+                # Quick stats
+                col1, col2, col3, col4 = st.columns(4)
+                
+                with col1:
+                    st.metric("Total Records", f"{len(processed_df):,}")
+                
+                with col2:
+                    if 'Year' in processed_df.columns:
+                        years = processed_df['Year'].dropna()
+                        if len(years) > 0:
+                            st.metric("Year Range", f"{int(years.min())}-{int(years.max())}")
+                
+                with col3:
+                    if 'Citations' in processed_df.columns:
+                        total_cites = int(processed_df['Citations'].sum())
+                        st.metric("Total Citations", f"{total_cites:,}")
+                
+                with col4:
+                    st.metric("Data Type", validation['data_type'].title())
+                
+                # Navigation to analytics
+                st.markdown("---")
+                st.success("🎉 **Ready to Analyze!** Choose a module below or use the sidebar.")
+                
+                col1, col2, col3, col4, col5 = st.columns(5)
+                
+                with col1:
+                    if st.button("📊 Descriptive", use_container_width=True, type="primary"):
+                        st.switch_page("pages/1_📊_Descriptive_Analytics.py")
+                
+                with col2:
+                    if st.button("🌐 Network", use_container_width=True):
+                        st.switch_page("pages/2_🌐_Network_Analysis.py")
+                
+                with col3:
+                    if st.button("💡 Semantic", use_container_width=True):
+                        st.switch_page("pages/3_💡_Semantic_Analysis.py")
+                
+                with col4:
+                    if st.button("📈 TRL", use_container_width=True):
+                        st.switch_page("pages/4_📈_TRL_Analysis.py")
+                
+                with col5:
+                    if st.button("🔬 Advanced", use_container_width=True):
+                        st.switch_page("pages/5_🔬_Advanced_Analytics.py")
+                
+    except Exception as e:
+        st.error(f"❌ Error processing file: {str(e)}")
+        
+        with st.expander("🔍 Technical Details"):
+            st.code(str(e))
+            
+            import traceback
+            st.code(traceback.format_exc())
+        
+        st.info("""
+        **Common Issues:**
+        - File encoding: Try saving as UTF-8 CSV
+        - Column names: Check for special characters
+        - File size: Very large files may timeout
+        - Format: Ensure it's a valid CSV file
+        """)    
     # Sidebar
     with st.sidebar:
         st.markdown("### 🎯 Quick Start Guide")
