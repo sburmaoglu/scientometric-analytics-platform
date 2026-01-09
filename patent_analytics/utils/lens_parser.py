@@ -392,3 +392,39 @@ def get_available_fields(df: pd.DataFrame, data_type: str) -> Dict[str, bool]:
         available[field] = found is not None
     
     return available
+def debug_preprocessing(df: pd.DataFrame, processed_df: pd.DataFrame, metadata: Dict):
+    """
+    Debug preprocessing results
+    """
+    print("=" * 50)
+    print("PREPROCESSING DEBUG")
+    print("=" * 50)
+    
+    print(f"\nOriginal columns ({len(df.columns)}):")
+    for col in df.columns:
+        print(f"  - {col}")
+    
+    print(f"\nProcessed columns ({len(processed_df.columns)}):")
+    for col in processed_df.columns:
+        print(f"  - {col}")
+    
+    print(f"\nMetadata:")
+    print(f"  Data type: {metadata.get('data_type', 'unknown')}")
+    print(f"  Confidence: {metadata.get('detection_confidence', 0):.1%}")
+    
+    print(f"\nMapped columns:")
+    for std, orig in metadata.get('mapped_columns', {}).items():
+        print(f"  {std} <- {orig}")
+    
+    print(f"\nGenerated columns:")
+    for col in metadata.get('generated_columns', []):
+        print(f"  {col}")
+    
+    print(f"\nStandardized columns check:")
+    standard_cols = ['Title', 'Year', 'Citations', 'Authors', 'Keywords']
+    for col in standard_cols:
+        exists = col in processed_df.columns
+        has_data = exists and processed_df[col].notna().sum() > 0
+        print(f"  {col}: {'✅' if exists else '❌'} | Data: {'✅' if has_data else '❌'}")
+    
+    print("=" * 50)
