@@ -121,60 +121,58 @@ with tab1:
 with tab2:
     st.markdown("## 📚 Publication Analysis")
     
-    # Top publications by citations
-    if citation_cols:
+    # Check what we have
+    has_title = 'Title' in df.columns
+    has_citations = 'Citations' in df.columns
+    has_year = 'Year' in df.columns
+    
+    # Show warnings for missing data
+    if not has_citations:
+        st.warning("⚠️ Citation data not found in dataset")
+        st.info("Unable to display publication rankings without citation information.")
+    elif not has_title:
+        st.warning("⚠️ Title data not found in dataset")
+        st.info("Unable to display publications without titles.")
+    else:
+        # We have what we need!
         st.markdown("### 🌟 Most Cited Publications")
         
-        title_cols = [col for col in df.columns if 'title' in col.lower()]
-        if title_cols:
-            top_pubs = df.nlargest(10, citation_cols[0])[
-                [title_cols[0], citation_cols[0]] + (year_cols if year_cols else [])
-            ]
+        try:
+            # Build column list carefully
+            cols = ['Title', 'Citations']
+            if has_year:
+                cols.append('Year')
             
-            # Rename columns for display
-            display_df = top_pubs.copy()
-            display_df.columns = ['Title', 'Citations'] + (['Year'] if year_cols else [])
+            # Get top 10
+            top_pubs = df.nlargest(10, 'Citations')[cols].copy()
             
-            st.dataframe(display_df, use_container_width=True, hide_index=True)
+            # Show table
+            st.dataframe(top_pubs, use_container_width=True, hide_index=True)
             
-            # Visualization
+            # Show chart
             fig = px.bar(
-                top_pubs.head(10),
-                x=citation_cols[0],
-                y=title_cols[0],
+                top_pubs,
+                x='Citations',
+                y='Title',
                 orientation='h',
-                title='Top 10 Most Cited Publications',
-                labels={citation_cols[0]: 'Citations', title_cols[0]: 'Title'}
+                title='Top 10 Most Cited'
             )
             fig.update_layout(yaxis={'categoryorder': 'total ascending'})
             st.plotly_chart(fig, use_container_width=True)
+            
+        except Exception as e:
+            st.error("❌ Error displaying data")
+            st.caption(str(e))
     
-    # Citation distribution
-    if citation_cols:
-        st.markdown("### 📊 Citation Distribution")
-        
-        col1, col2 = st.columns(2)
-        
-        with col1:
-            fig = px.histogram(
-                df,
-                x=citation_cols[0],
-                nbins=50,
-                title='Citation Distribution',
-                labels={citation_cols[0]: 'Citations', 'count': 'Number of Publications'}
-            )
+    # Year trends (if available)
+    if has_year and 'Year' in df.columns:
+        st.markdown("### 📅 Publications Over Time")
+        try:
+            yearly = df.groupby('Year').size().reset_index(name='Count')
+            fig = px.line(yearly, x='Year', y='Count', markers=True)
             st.plotly_chart(fig, use_container_width=True)
-        
-        with col2:
-            # Box plot
-            fig = px.box(
-                df,
-                y=citation_cols[0],
-                title='Citation Statistics',
-                labels={citation_cols[0]: 'Citations'}
-            )
-            st.plotly_chart(fig, use_container_width=True)
-
+        except:
+            st.info("Unable to show trends")
 with tab3:
     st.markdown("## 👥 Author Analysis")
     
