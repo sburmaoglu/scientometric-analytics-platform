@@ -546,8 +546,26 @@ def main():
                     df = pd.read_csv(uploaded_file)
                     
                     # Validate
-                    validation = validate_lens_format(df)
-                    
+                    validation = validate_lens_format(df_raw)
+
+                    if not validation['is_valid']:
+                        st.error(f"""
+                        ❌ **This doesn't appear to be a lens.org file!**
+    
+                            {validation.get('message', 'Unknown error')}
+    
+                            **Detection confidence:** {validation.get('confidence', 0):.0%}
+                            **Data type detected:** {validation.get('data_type', 'Unknown')}
+    
+                            **Please ensure:**
+                            - File is exported directly from lens.org
+                            - Export format is CSV (not Excel or other)
+                            - File hasn't been modified after export
+                            - File contains at least 5 columns
+                            """)
+    
+             with st.expander("📋 Show Available Columns"):
+                st.write(list(df_raw.columns))
                     if validation['is_valid']:
                         # Preprocess
                         processed_df, report = preprocess_lens_data(df)
@@ -555,7 +573,7 @@ def main():
                         # Save to session state
                         st.session_state.df = processed_df
                         st.session_state.data_uploaded = True
-                        st.session_state.file_name = uploaded_file.name
+                        st.session_state.file_name = uploaded_file.name 
                         st.session_state.data_source = validation.get('source', 'unknown')
                         st.session_state.data_type = validation.get('data_type', 'unknown')
                         
