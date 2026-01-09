@@ -262,7 +262,37 @@ def show_upload_section():
                         st.info(f"🎯 **Confidence:** {confidence:.0%}")
                     with col_c:
                         st.info(f"📊 **Records:** {len(df_processed):,}")
-                    
+
+                    with st.expander("🔍 DEBUG: Column Mapping"):
+                        st.write("**Original Columns:**")
+                        st.write(list(df_raw.columns))
+    
+                        st.write("**Processed Columns:**")
+                        st.write(list(processed_df.columns))
+    
+                        st.write("**Metadata:**")
+                        st.json(metadata)
+    
+                    # Check specific columns
+                        st.write("**Column Checks:**")
+                        checks = {
+                            'Has Title': 'Title' in processed_df.columns,
+                            'Has Year': 'Year' in processed_df.columns,
+                            'Has Citations': 'Citations' in processed_df.columns,
+                            'Has Authors': 'Authors' in processed_df.columns,
+                            'Has Keywords': 'Keywords' in processed_df.columns
+                                }
+                    for check, result in checks.items():
+                        st.write(f"{check}: {'✅' if result else '❌'}")
+    
+                    # Show sample data from key columns
+                    if 'Keywords' in processed_df.columns:
+                        st.write("**Sample Keywords:**")
+                        st.write(processed_df['Keywords'].head(3))
+    
+                    if 'Citations' in processed_df.columns:
+                        st.write("**Sample Citations:**")
+                        st.write(processed_df['Citations'].head(3))
                     # Show preprocessing info
                     with st.expander("🔧 Preprocessing Details"):
                         st.markdown("### Mapped Columns")
