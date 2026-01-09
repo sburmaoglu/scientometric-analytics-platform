@@ -287,8 +287,8 @@ def preprocess_lens_data(df: pd.DataFrame, data_type: str = None) -> Tuple[pd.Da
                 processed_df['Year'] = pd.to_datetime(df[found_col], errors='coerce').dt.year
                 metadata['mapped_columns']['Year'] = found_col
             elif standard_name == 'citations':
-                # Convert to numeric
-                processed_df['Citations'] = pd.to_numeric(df[found_col], errors='coerce').fillna(0)
+                # Map citations column
+                processed_df['Citations'] = pd.to_numeric(df[found_col], errors='coerce').fillna(0).astype(int)
                 metadata['mapped_columns']['Citations'] = found_col
             elif standard_name == 'keywords':
                 processed_df['Keywords'] = df[found_col]
@@ -296,7 +296,12 @@ def preprocess_lens_data(df: pd.DataFrame, data_type: str = None) -> Tuple[pd.Da
             elif standard_name == 'abstract':
                 processed_df['Abstract'] = df[found_col]
                 metadata['mapped_columns']['Abstract'] = found_col
-    
+    # After all column mapping, check if Citations exists
+    if 'Citations' not in processed_df.columns:
+        # Generate Citations column with zeros
+        processed_df['Citations'] = 0
+        metadata['generated_columns'].append('Citations')
+        st.warning("⚠️ Citations column not found - initialized with zeros")
     # Generate Authors column for patents if inventors were found
     if data_type == 'patent' and 'Authors' not in processed_df.columns:
         # Try to use inventors as authors
@@ -306,17 +311,27 @@ def preprocess_lens_data(df: pd.DataFrame, data_type: str = None) -> Tuple[pd.Da
             metadata['generated_columns'].append('Authors (from Inventors)')
     
     # Generate Keywords if not present
-    if 'Keywords' not in processed_df.columns:
-        # Try to extract from title and abstract
-        text_cols = []
-        if 'Title' in processed_df.columns:
-            text_cols.append('Title')
-        if 'Abstract' in processed_df.columns:
-            text_cols.append('Abstract')
-        
-        if text_cols:
-            processed_df['Keywords'] = extract_keywords_from_text(df, text_cols)
-            metadata['generated_columns'].append('Keywords (extracted from text)')
+    # Generate keywords if missing
+if 'Keywords' not in processed_df.columns:
+    st.info("🔧 Generating keywords from available text...")
+    
+    # Try to extract from multiple sources
+    text_sources = []
+    if 'Title' in processed_df.columns:
+        text_sources.append('Title')
+    if 'Abstract' in processed_df.columns:
+        text_sources.append('Abstract')
+    
+    if text_sources:
+        processed_df['Keywords'] = generate_keywords_from_text(
+            processed_df, 
+            text_sources
+        )
+        metadata['generated_columns'].append('Keywords')
+    else:
+        # No text sources - create empty column
+        processed_df['Keywords'] = ''
+        metadata['generated_columns'].append('Keywords')
     
     # Add data type column
     processed_df['Data_Type'] = data_type
