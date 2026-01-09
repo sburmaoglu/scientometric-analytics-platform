@@ -82,19 +82,19 @@ Free Tool for Research Analysis. Retrieved from https://scholar.google.com/citat
     st.markdown("""
     If you specifically use certain modules, you can reference them:
     
-    - **TRL Analysis**: "Technology Readiness Level assessment performed using Burmaoglu (2024)"
-    - **Network Analysis**: "Network visualization conducted using the Patent & Publication Analytics Platform (Burmaoglu, 2024)"
-    - **Semantic Analysis**: "Topic evolution analysis performed using Burmaoglu (2024)"
+    - **TRL Analysis**: "Technology Readiness Level assessment performed using Burmaoglu (2026)"
+    - **Network Analysis**: "Network visualization conducted using the Patent & Publication Analytics Platform (Burmaoglu, 2026)"
+    - **Semantic Analysis**: "Topic evolution analysis performed using Burmaoglu (2026)"
     """)
 
 with tab2:
     st.markdown("### BibTeX Format")
     
-    bibtex = """@software{burmaoglu2024patent,
+    bibtex = """@software{burmaoglu2026patent,
   author = {Burmaoglu, Serhat},
   title = {Patent & Publication Analytics Platform: A Comprehensive 
            Free Tool for Research Analysis},
-  year = {2024},
+  year = {2026},
   url = {https://scholar.google.com/citations?user=HTleNI8AAAAJ&hl=en&oi=ao},
   note = {Free research analytics platform for lens.org data}
 }"""
@@ -107,7 +107,7 @@ with tab2:
     st.markdown("""
     **Usage in LaTeX:**
     ```latex
-    \\cite{burmaoglu2024patent}
+    \\cite{burmaoglu2026patent}
     ```
     """)
 
