@@ -350,8 +350,8 @@ def validate_lens_format(df: pd.DataFrame) -> Dict:
     data_type, confidence = detect_data_type(df)
     
     # Validation rules
-    min_columns = 5
-    min_confidence = 0.3
+    min_columns = 5  # Lens.org exports typically have many columns
+    min_confidence = 0.3  # At least 30% match
     
     is_valid = (
         len(df.columns) >= min_columns and
@@ -374,6 +374,7 @@ def validate_lens_format(df: pd.DataFrame) -> Dict:
         'source': source,
         'message': message
     }
+
 
 
 def get_available_fields(df: pd.DataFrame, data_type: str) -> Dict[str, bool]:
