@@ -329,122 +329,89 @@ with tab2:
 
 with tab3:
     st.markdown("## 🎯 Impact Analysis")
-    st.info("Assess the impact and influence of publications/patents")
     
-    citation_cols = [col for col in df.columns if 'citation' in col.lower()]
-    year_cols = [col for col in df.columns if 'year' in col.lower()]
+    # Check required columns
+    if 'Citations' not in df.columns:
+        st.warning("⚠️ Citation data required for impact analysis")
+        st.stop()
     
-    if not citation_cols:
-        st.error("❌ Citation data required for impact analysis")
-    else:
-        citation_col = citation_cols[0]
-        
-        st.markdown("### 📊 Citation Impact Metrics")
-        
-        # Calculate h-index
-        citations_sorted = sorted(df[citation_col].dropna().values, reverse=True)
-        h_index = 0
-        for i, citations in enumerate(citations_sorted, 1):
-            if citations >= i:
-                h_index = i
-            else:
-                break
-        
-        # i10-index
-        i10_index = len([c for c in citations_sorted if c >= 10])
-        
-        # i100-index (highly cited)
-        i100_index = len([c for c in citations_sorted if c >= 100])
-        
-        col1, col2, col3, col4 = st.columns(4)
-        
+    if 'Title' not in df.columns:
+        st.warning("⚠️ Title data required for display")
+        st.stop()
+    
+    col1, col2, col3 = st.columns(3)
+    
+    # Calculate impact metrics
+    try:
         with col1:
+            st.markdown("### 📊 Core Metrics")
+            
+            # H-index calculation
+            citations = sorted(df['Citations'].dropna().tolist(), reverse=True)
+            h_index = 0
+            for i, c in enumerate(citations, 1):
+                if c >= i:
+                    h_index = i
+                else:
+                    break
+            
             st.metric("h-index", h_index)
-            st.caption("Core impact measure")
-        
-        with col2:
-            st.metric("i10-index", i10_index)
+            st.caption("Papers with ≥h citations")
+            
+            # i10-index
+            i10 = len([c for c in citations if c >= 10])
+            st.metric("i10-index", i10)
             st.caption("Papers with ≥10 citations")
         
+        with col2:
+            st.markdown("### 📈 Citation Statistics")
+            
+            total_cites = int(df['Citations'].sum())
+            avg_cites = df['Citations'].mean()
+            median_cites = df['Citations'].median()
+            
+            st.metric("Total Citations", f"{total_cites:,}")
+            st.metric("Mean Citations", f"{avg_cites:.2f}")
+            st.metric("Median Citations", f"{median_cites:.1f}")
+        
         with col3:
-            st.metric("i100-index", i100_index)
-            st.caption("Highly cited (≥100)")
-        
-        with col4:
-            total_citations = int(df[citation_col].sum())
-            st.metric("Total Citations", f"{total_citations:,}")
-        
-        # Citation percentiles
-        st.markdown("### 📈 Citation Percentile Distribution")
-        
-        percentiles = [10, 25, 50, 75, 90, 95, 99]
-        percentile_values = [np.percentile(df[citation_col].dropna(), p) for p in percentiles]
-        
-        fig = go.Figure()
-        
-        fig.add_trace(go.Bar(
-            x=[f"{p}th" for p in percentiles],
-            y=percentile_values,
-            text=[f"{v:.0f}" for v in percentile_values],
-            textposition='auto'
-        ))
-        
-        fig.update_layout(
-            title='Citation Percentiles',
-            xaxis_title='Percentile',
-            yaxis_title='Citations',
-            height=400
-        )
-        
-        st.plotly_chart(fig, use_container_width=True)
-        
-        # Top cited publications
-        st.markdown("### 🌟 Most Influential Publications")
-        
-        title_cols = [col for col in df.columns if 'title' in col.lower()]
-        
-        if title_cols:
-            top_cited = df.nlargest(10, citation_col)[[title_cols[0], citation_col] + (year_cols if year_cols else [])]
+            st.markdown("### 📍 Percentiles")
             
-            display_cols = ['Title', 'Citations'] + (['Year'] if year_cols else [])
-            display_columns = ['Title', 'Citations']
-            if 'Year' in df.columns:
-                display_columns.append('Year')
-            if 'Authors' in df.columns:
-                display_columns.append('Authors')
-
-# Get top cited (only existing columns)
-top_cited = df.nlargest(10, 'Citations')[display_columns].copy()
-
-# Display directly - no column renaming needed
-st.dataframe(top_cited, use_container_width=True, hide_index=True)
-            
-            st.dataframe(top_cited, use_container_width=True, hide_index=True)
+            percentiles = df['Citations'].quantile([0.75, 0.9, 0.95])
+            st.write(f"**75th:** {percentiles[0.75]:.0f}")
+            st.write(f"**90th:** {percentiles[0.9]:.0f}")
+            st.write(f"**95th:** {percentiles[0.95]:.0f}")
         
-        # Citation age analysis
-        if year_cols:
-            year_col = year_cols[0]
-            current_year = df[year_col].max()
+        st.markdown("---")
+        
+        # Most cited - FIXED VERSION
+        st.markdown("### 🌟 Most Cited")
+        
+        # Build columns safely
+        cols_to_show = ['Title', 'Citations']
+        if 'Year' in df.columns:
+            cols_to_show.append('Year')
+        
+        # Get top cited
+        top_cited = df.nlargest(10, 'Citations')[cols_to_show].copy()
+        
+        # Display directly - no renaming needed
+        st.dataframe(top_cited, use_container_width=True, hide_index=True)
+        
+        # Methodology
+        with st.expander("📚 Methodology & Citations"):
+            st.markdown("""
+            ### Impact Metrics
             
-            st.markdown("### ⏰ Citation Age Analysis")
-            
-            df_with_age = df.copy()
-            df_with_age['age'] = current_year - df_with_age[year_col]
-            df_with_age = df_with_age[df_with_age['age'] >= 0]
-            
-            # Citations per year of age
-            avg_citations_by_age = df_with_age.groupby('age')[citation_col].mean()
-            
-            fig = px.line(
-                x=avg_citations_by_age.index,
-                y=avg_citations_by_age.values,
-                title='Average Citations by Publication Age',
-                labels={'x': 'Years Since Publication', 'y': 'Average Citations'},
-                markers=True
-            )
-            
-            st.plotly_chart(fig, use_container_width=True)
-
+            **h-index:**
+            - Reference: Hirsch, J. E. (2005). An index to quantify an individual's 
+              scientific research output. PNAS, 102(46), 16569-16572.
+            Impact analysis performed using Patent & Publication Analytics Platform 
+        (Burmaoglu, 2024). H-index calculated following Hirsch (2005).
+            **How to Cite:**
+            """)
+        except Exception as e:
+        st.error(f"❌ Error: {str(e)}")
 with tab4:
     st.markdown("## 📉 Statistical Tests & Analysis")
     st.info("Perform statistical tests to validate hypotheses about your data")
