@@ -1,8 +1,14 @@
+"""
+Enhanced Semantic Analysis with NLP Features
+Replace pages/3_💡_Semantic_Analysis.py with this improved version
+"""
+
 import streamlit as st
 import pandas as pd
 import plotly.express as px
 import plotly.graph_objects as go
 from collections import Counter
+import re
 from wordcloud import WordCloud
 import matplotlib.pyplot as plt
 import numpy as np
@@ -10,7 +16,7 @@ import numpy as np
 st.set_page_config(page_title="Semantic Analysis", page_icon="💡", layout="wide")
 
 st.title("💡 Semantic Analysis")
-st.markdown("Topic modeling, keyword trends, and semantic patterns in your research data")
+st.markdown("Advanced text mining and topic modeling")
 
 # Check if data is uploaded
 if not st.session_state.get('data_uploaded', False):
@@ -21,448 +27,600 @@ if not st.session_state.get('data_uploaded', False):
 
 df = st.session_state.df
 
-# Helper functions
-def extract_all_keywords(df, keyword_col):
-    """Extract and count all keywords"""
-    all_keywords = []
-    for keywords in df[keyword_col].dropna():
-        if isinstance(keywords, str):
-            kw_list = [k.strip().lower() for k in keywords.replace(';', ',').split(',')]
-            all_keywords.extend([k for k in kw_list if k])
-    return Counter(all_keywords)
+# Check for required columns
+if 'Title' not in df.columns and 'Abstract' not in df.columns and 'Keywords' not in df.columns:
+    st.error("❌ No text data available for semantic analysis")
+    st.info("This module requires at least one of: Title, Abstract, or Keywords")
+    st.stop()
 
-def extract_ngrams(text_series, n=2):
+# ============= TEXT PREPROCESSING =============
+def preprocess_text(text):
+    """Clean and preprocess text"""
+    if pd.isna(text):
+        return ""
+    
+    text = str(text).lower()
+    
+    # Remove special characters and digits
+    text = re.sub(r'[^\w\s]', ' ', text)
+    text = re.sub(r'\d+', '', text)
+    
+    # Remove extra whitespace
+    text = ' '.join(text.split())
+    
+    return text
+
+def remove_stopwords(text, custom_stopwords=None):
+    """Remove common stopwords"""
+    default_stopwords = {
+        'the', 'a', 'an', 'and', 'or', 'but', 'in', 'on', 'at', 'to', 'for',
+        'of', 'with', 'by', 'from', 'as', 'is', 'was', 'are', 'were', 'been',
+        'be', 'have', 'has', 'had', 'do', 'does', 'did', 'will', 'would',
+        'could', 'should', 'may', 'might', 'must', 'can', 'this', 'that',
+        'these', 'those', 'i', 'you', 'he', 'she', 'it', 'we', 'they',
+        'what', 'which', 'who', 'when', 'where', 'why', 'how', 'all', 'each',
+        'every', 'both', 'few', 'more', 'most', 'other', 'some', 'such',
+        'no', 'nor', 'not', 'only', 'own', 'same', 'so', 'than', 'too',
+        'very', 'can', 'just', 'should', 'now', 'use', 'used', 'using',
+        'based', 'new', 'study', 'research', 'paper', 'article', 'analysis'
+    }
+    
+    if custom_stopwords:
+        default_stopwords.update(custom_stopwords)
+    
+    words = text.split()
+    filtered = [w for w in words if w not in default_stopwords and len(w) > 2]
+    return ' '.join(filtered)
+
+# ============= N-GRAM EXTRACTION =============
+def extract_ngrams(text, n=2):
     """Extract n-grams from text"""
-    from collections import defaultdict
-    ngrams = defaultdict(int)
+    words = text.split()
+    ngrams = []
     
-    for text in text_series.dropna():
-        if isinstance(text, str):
-            words = text.lower().split()
-            for i in range(len(words) - n + 1):
-                ngram = ' '.join(words[i:i+n])
-                ngrams[ngram] += 1
+    for i in range(len(words) - n + 1):
+        ngram = ' '.join(words[i:i+n])
+        ngrams.append(ngram)
     
-    return dict(sorted(ngrams.items(), key=lambda x: x[1], reverse=True))
+    return ngrams
 
-def calculate_keyword_growth(df, keyword_col, year_col, keywords_to_track):
-    """Calculate keyword frequency over time"""
-    data = []
+def get_ngram_frequencies(texts, n=2, top_k=30, preprocess=True, remove_stops=True):
+    """Get most frequent n-grams from texts"""
+    all_ngrams = []
     
-    for year in sorted(df[year_col].dropna().unique()):
-        year_df = df[df[year_col] == year]
+    for text in texts:
+        if pd.isna(text):
+            continue
         
-        for keyword in keywords_to_track:
-            count = sum(
-                keyword.lower() in str(kws).lower()
-                for kws in year_df[keyword_col].dropna()
-            )
+        text = str(text)
+        
+        if preprocess:
+            text = preprocess_text(text)
+        
+        if remove_stops:
+            text = remove_stopwords(text)
+        
+        ngrams = extract_ngrams(text, n)
+        all_ngrams.extend(ngrams)
+    
+    counter = Counter(all_ngrams)
+    return counter.most_common(top_k)
+
+# ============= LDA TOPIC MODELING =============
+def simple_lda_analysis(texts, num_topics=5, top_words=10):
+    """
+    Simplified topic modeling using word co-occurrence
+    (Full LDA would require sklearn)
+    """
+    # Build word co-occurrence matrix
+    word_doc_freq = Counter()
+    word_cooccurrence = {}
+    
+    for text in texts:
+        if pd.isna(text):
+            continue
+        
+        text = preprocess_text(str(text))
+        text = remove_stopwords(text)
+        words = list(set(text.split()))  # Unique words in doc
+        
+        for word in words:
+            if len(word) > 3:
+                word_doc_freq[word] += 1
+                
+                # Build co-occurrence
+                if word not in word_cooccurrence:
+                    word_cooccurrence[word] = Counter()
+                
+                for other_word in words:
+                    if other_word != word and len(other_word) > 3:
+                        word_cooccurrence[word][other_word] += 1
+    
+    # Find most common words
+    top_words_list = [w for w, c in word_doc_freq.most_common(100)]
+    
+    # Create topics based on co-occurrence clusters
+    topics = []
+    used_words = set()
+    
+    for i in range(num_topics):
+        if not top_words_list:
+            break
+        
+        # Start with an unused top word
+        seed_word = None
+        for word in top_words_list:
+            if word not in used_words:
+                seed_word = word
+                break
+        
+        if not seed_word:
+            break
+        
+        # Get words that co-occur most with seed
+        related = word_cooccurrence.get(seed_word, Counter())
+        topic_words = [seed_word]
+        used_words.add(seed_word)
+        
+        for word, count in related.most_common(top_words - 1):
+            if word not in used_words and len(word) > 3:
+                topic_words.append(word)
+                used_words.add(word)
+        
+        if len(topic_words) < top_words:
+            # Fill with remaining top words
+            for word in top_words_list:
+                if word not in used_words and len(topic_words) < top_words:
+                    topic_words.append(word)
+                    used_words.add(word)
+        
+        topics.append(topic_words)
+    
+    return topics
+
+# ============= KEYWORD EMERGENCE ANALYSIS =============
+def analyze_keyword_emergence(df, text_column, year_column='Year', min_docs=5):
+    """
+    Analyze emerging keywords over time
+    """
+    if year_column not in df.columns:
+        return None
+    
+    # Get keywords by year
+    year_keywords = {}
+    
+    for idx, row in df.iterrows():
+        year = row.get(year_column)
+        text = row.get(text_column)
+        
+        if pd.isna(year) or pd.isna(text):
+            continue
+        
+        year = int(year)
+        text = preprocess_text(str(text))
+        text = remove_stopwords(text)
+        words = text.split()
+        
+        if year not in year_keywords:
+            year_keywords[year] = Counter()
+        
+        year_keywords[year].update(words)
+    
+    # Calculate emergence scores
+    years = sorted(year_keywords.keys())
+    
+    if len(years) < 2:
+        return None
+    
+    # Get recent vs historical keywords
+    recent_years = years[-2:]  # Last 2 years
+    historical_years = years[:-2] if len(years) > 2 else years[:1]
+    
+    recent_keywords = Counter()
+    for year in recent_years:
+        recent_keywords.update(year_keywords[year])
+    
+    historical_keywords = Counter()
+    for year in historical_years:
+        historical_keywords.update(year_keywords[year])
+    
+    # Calculate emergence score (new frequency / historical frequency)
+    emerging = []
+    
+    for word, recent_count in recent_keywords.most_common(100):
+        if len(word) <= 3:
+            continue
+        
+        historical_count = historical_keywords.get(word, 0)
+        
+        if recent_count >= min_docs:
+            if historical_count == 0:
+                # New keyword
+                emergence_score = recent_count * 10
+            else:
+                # Growing keyword
+                emergence_score = (recent_count / historical_count) * recent_count
             
-            data.append({
-                'Year': int(year),
-                'Keyword': keyword,
-                'Count': count,
-                'Publications': len(year_df)
+            emerging.append({
+                'keyword': word,
+                'recent_count': recent_count,
+                'historical_count': historical_count,
+                'emergence_score': emergence_score,
+                'status': 'New' if historical_count == 0 else 'Growing'
             })
     
-    result_df = pd.DataFrame(data)
-    result_df['Percentage'] = (result_df['Count'] / result_df['Publications'] * 100).round(2)
+    # Sort by emergence score
+    emerging.sort(key=lambda x: x['emergence_score'], reverse=True)
     
-    return result_df
+    return pd.DataFrame(emerging[:30])
 
-# Main interface
-tab1, tab2, tab3, tab4 = st.tabs([
-    "🔤 Keyword Analysis",
-    "📊 Topic Evolution", 
+
+# ============= MAIN UI =============
+
+# Sidebar settings
+with st.sidebar:
+    st.markdown("### ⚙️ Analysis Settings")
+    
+    # Text source selection
+    text_sources = []
+    if 'Title' in df.columns:
+        text_sources.append('Title')
+    if 'Abstract' in df.columns:
+        text_sources.append('Abstract')
+    if 'Keywords' in df.columns:
+        text_sources.append('Keywords')
+    
+    if text_sources:
+        selected_source = st.selectbox(
+            "Text Source",
+            text_sources,
+            help="Choose which field to analyze"
+        )
+    else:
+        st.error("No text fields available")
+        st.stop()
+    
+    st.markdown("---")
+    
+    # Preprocessing options
+    st.markdown("#### Text Preprocessing")
+    apply_preprocessing = st.checkbox("Apply preprocessing", value=True)
+    remove_stops = st.checkbox("Remove stopwords", value=True)
+    
+    # Custom stopwords
+    custom_stops = st.text_area(
+        "Additional stopwords (comma-separated)",
+        help="Add domain-specific words to exclude"
+    )
+    custom_stopwords = set([w.strip().lower() for w in custom_stops.split(',') if w.strip()])
+
+# Main tabs
+tab1, tab2, tab3, tab4, tab5 = st.tabs([
+    "🔤 N-Grams",
+    "📊 Topic Modeling (LDA)",
+    "🚀 Emergence Analysis",
     "☁️ Word Clouds",
-    "🎯 Semantic Patterns"
+    "📈 Keyword Trends"
 ])
 
+# ============= TAB 1: N-GRAMS =============
 with tab1:
-    st.markdown("## 🔤 Comprehensive Keyword Analysis")
+    st.markdown("## 🔤 N-Gram Analysis")
+    st.info("Extract frequent word sequences (unigrams, bigrams, trigrams)")
     
-    # Find keyword column
-    keyword_cols = [col for col in df.columns if 'keyword' in col.lower() or 'subject' in col.lower()]
+    col1, col2 = st.columns([1, 3])
     
-    if not keyword_cols:
-        st.error("❌ No keyword column found in the dataset")
-    else:
-        keyword_col = keyword_cols[0]
+    with col1:
+        ngram_type = st.radio(
+            "N-gram Type",
+            ["Unigrams (1-word)", "Bigrams (2-word)", "Trigrams (3-word)"],
+            help="Select sequence length"
+        )
         
-        st.info(f"📊 Analyzing keywords from column: **{keyword_col}**")
+        n = 1 if "Unigrams" in ngram_type else (2 if "Bigrams" in ngram_type else 3)
         
-        # Extract all keywords
-        keyword_counts = extract_all_keywords(df, keyword_col)
-        
-        if not keyword_counts:
-            st.warning("No keywords found in the dataset")
-        else:
-            st.success(f"✅ Found **{len(keyword_counts):,}** unique keywords")
-            
-            # Top keywords
-            st.markdown("### 🏆 Most Frequent Keywords")
-            
-            top_n = st.slider("Number of keywords to display", 10, 100, 30)
-            
-            top_keywords = keyword_counts.most_common(top_n)
-            
-            col1, col2 = st.columns([2, 1])
-            
-            with col1:
-                # Bar chart
-                fig = px.bar(
-                    x=[count for _, count in top_keywords],
-                    y=[kw.title() for kw, _ in top_keywords],
-                    orientation='h',
-                    title=f'Top {top_n} Keywords by Frequency',
-                    labels={'x': 'Frequency', 'y': 'Keyword'}
-                )
-                fig.update_layout(yaxis={'categoryorder': 'total ascending'}, height=600)
-                st.plotly_chart(fig, use_container_width=True)
-            
-            with col2:
-                st.markdown("#### 📊 Keyword Statistics")
-                st.dataframe(
-                    pd.DataFrame(top_keywords[:20], columns=['Keyword', 'Count']),
-                    use_container_width=True,
-                    hide_index=True,
-                    height=600
-                )
-            
-            # Keyword distribution analysis
-            st.markdown("### 📈 Keyword Distribution Analysis")
-            
-            counts_only = [count for _, count in keyword_counts.items()]
-            
-            col1, col2, col3 = st.columns(3)
-            
-            with col1:
-                st.metric("Total Keywords", f"{len(keyword_counts):,}")
-                st.metric("Total Occurrences", f"{sum(counts_only):,}")
-            
-            with col2:
-                st.metric("Mean Frequency", f"{np.mean(counts_only):.1f}")
-                st.metric("Median Frequency", f"{np.median(counts_only):.0f}")
-            
-            with col3:
-                single_use = sum(1 for c in counts_only if c == 1)
-                st.metric("Single-use Keywords", f"{single_use:,}")
-                st.metric("% Single-use", f"{single_use/len(keyword_counts)*100:.1f}%")
-            
-            # Distribution histogram
-            fig = px.histogram(
-                x=counts_only,
-                nbins=50,
-                title='Keyword Frequency Distribution',
-                labels={'x': 'Frequency', 'y': 'Number of Keywords'}
-            )
-            st.plotly_chart(fig, use_container_width=True)
+        top_k = st.slider("Number of n-grams", 10, 100, 30)
+    
+    with col2:
+        if selected_source in df.columns:
+            try:
+                with st.spinner(f"Extracting {ngram_type.lower()}..."):
+                    texts = df[selected_source].dropna()
+                    
+                    ngrams = get_ngram_frequencies(
+                        texts,
+                        n=n,
+                        top_k=top_k,
+                        preprocess=apply_preprocessing,
+                        remove_stops=remove_stops
+                    )
+                    
+                    if ngrams:
+                        # Create dataframe
+                        ngram_df = pd.DataFrame(ngrams, columns=['N-gram', 'Frequency'])
+                        
+                        # Visualization
+                        fig = px.bar(
+                            ngram_df.head(20),
+                            x='Frequency',
+                            y='N-gram',
+                            orientation='h',
+                            title=f'Top 20 {ngram_type}'
+                        )
+                        fig.update_layout(yaxis={'categoryorder': 'total ascending'}, height=500)
+                        st.plotly_chart(fig, use_container_width=True)
+                        
+                        # Data table
+                        st.markdown("#### Full Results")
+                        st.dataframe(ngram_df, use_container_width=True, hide_index=True)
+                        
+                    else:
+                        st.warning("⚠️ No n-grams found. Try adjusting preprocessing settings.")
+                        
+            except Exception as e:
+                st.error(f"❌ Error extracting n-grams: {str(e)}")
 
+# ============= TAB 2: TOPIC MODELING =============
 with tab2:
-    st.markdown("## 📊 Topic Evolution Over Time")
+    st.markdown("## 📊 Topic Modeling (LDA-style)")
+    st.info("Discover latent topics in your documents using co-occurrence analysis")
     
-    keyword_cols = [col for col in df.columns if 'keyword' in col.lower()]
-    year_cols = [col for col in df.columns if 'year' in col.lower()]
+    col1, col2 = st.columns([1, 3])
     
-    if not keyword_cols or not year_cols:
-        st.error("❌ Need both keyword and year columns for temporal analysis")
-    else:
-        keyword_col = keyword_cols[0]
-        year_col = year_cols[0]
-        
-        st.info("🔍 Track how specific keywords evolve over time")
-        
-        # Get all keywords for selection
-        all_keywords = extract_all_keywords(df, keyword_col)
-        top_keywords_list = [kw for kw, _ in all_keywords.most_common(100)]
-        
-        # Keyword selection
-        col1, col2 = st.columns([3, 1])
-        
-        with col1:
-            selected_keywords = st.multiselect(
-                "Select keywords to track (max 10)",
-                options=top_keywords_list,
-                default=top_keywords_list[:5],
-                max_selections=10
-            )
-        
-        with col2:
-            metric_type = st.radio(
-                "Metric",
-                ["Absolute Count", "Percentage"]
-            )
-        
-        if selected_keywords:
-            with st.spinner("Calculating keyword trends..."):
-                trend_df = calculate_keyword_growth(df, keyword_col, year_col, selected_keywords)
-                
-                # Line chart
-                if metric_type == "Absolute Count":
-                    fig = px.line(
-                        trend_df,
-                        x='Year',
-                        y='Count',
-                        color='Keyword',
-                        title='Keyword Trends Over Time (Absolute Count)',
-                        markers=True
+    with col1:
+        num_topics = st.slider("Number of Topics", 3, 10, 5)
+        words_per_topic = st.slider("Words per Topic", 5, 15, 10)
+    
+    with col2:
+        if selected_source in df.columns:
+            try:
+                with st.spinner("Discovering topics..."):
+                    texts = df[selected_source].dropna()
+                    
+                    topics = simple_lda_analysis(
+                        texts,
+                        num_topics=num_topics,
+                        top_words=words_per_topic
                     )
-                else:
-                    fig = px.line(
-                        trend_df,
-                        x='Year',
-                        y='Percentage',
-                        color='Keyword',
-                        title='Keyword Trends Over Time (% of Publications)',
-                        markers=True
-                    )
-                    fig.update_yaxes(title='Percentage (%)')
-                
-                st.plotly_chart(fig, use_container_width=True)
-                
-                # Growth analysis
-                st.markdown("### 📈 Growth Analysis")
-                
-                growth_data = []
-                for keyword in selected_keywords:
-                    kw_data = trend_df[trend_df['Keyword'] == keyword].sort_values('Year')
-                    if len(kw_data) >= 2:
-                        first_count = kw_data.iloc[0]['Count']
-                        last_count = kw_data.iloc[-1]['Count']
+                    
+                    if topics:
+                        st.markdown("### 🎯 Discovered Topics")
                         
-                        if first_count > 0:
-                            growth = ((last_count - first_count) / first_count) * 100
-                        else:
-                            growth = 0
+                        for i, topic_words in enumerate(topics, 1):
+                            with st.expander(f"**Topic {i}**: {' • '.join(topic_words[:5])}", expanded=True):
+                                st.markdown(f"**Top words:** {', '.join(topic_words)}")
+                                
+                                # Simple visualization
+                                topic_df = pd.DataFrame({
+                                    'Word': topic_words,
+                                    'Relevance': list(range(len(topic_words), 0, -1))
+                                })
+                                
+                                fig = px.bar(
+                                    topic_df,
+                                    x='Relevance',
+                                    y='Word',
+                                    orientation='h',
+                                    title=f'Topic {i} Word Weights'
+                                )
+                                fig.update_layout(showlegend=False, height=300)
+                                st.plotly_chart(fig, use_container_width=True)
+                    else:
+                        st.warning("⚠️ Unable to extract topics. Try different settings.")
                         
-                        growth_data.append({
-                            'Keyword': keyword,
-                            'First Year': kw_data.iloc[0]['Year'],
-                            'Last Year': kw_data.iloc[-1]['Year'],
-                            'Initial Count': first_count,
-                            'Final Count': last_count,
-                            'Growth %': f"{growth:+.1f}%"
-                        })
-                
-                if growth_data:
-                    growth_df = pd.DataFrame(growth_data)
-                    st.dataframe(growth_df, use_container_width=True, hide_index=True)
-                
-                # Emerging vs declining keywords
-                st.markdown("### 🎯 Keyword Momentum")
-                
-                col1, col2 = st.columns(2)
-                
-                with col1:
-                    st.markdown("#### 🚀 Rising Keywords")
-                    rising = [item for item in growth_data if '+' in item['Growth %']]
-                    if rising:
-                        rising_sorted = sorted(rising, key=lambda x: float(x['Growth %'].replace('%', '').replace('+', '')), reverse=True)
-                        for item in rising_sorted[:5]:
-                            st.success(f"**{item['Keyword']}**: {item['Growth %']}")
-                    else:
-                        st.info("No rising keywords in selection")
-                
-                with col2:
-                    st.markdown("#### 📉 Declining Keywords")
-                    declining = [item for item in growth_data if '-' in item['Growth %']]
-                    if declining:
-                        declining_sorted = sorted(declining, key=lambda x: float(x['Growth %'].replace('%', '').replace('+', '').replace('-', '')), reverse=True)
-                        for item in declining_sorted[:5]:
-                            st.warning(f"**{item['Keyword']}**: {item['Growth %']}")
-                    else:
-                        st.info("No declining keywords in selection")
+            except Exception as e:
+                st.error(f"❌ Error in topic modeling: {str(e)}")
 
+# ============= TAB 3: EMERGENCE ANALYSIS =============
 with tab3:
-    st.markdown("## ☁️ Word Cloud Visualizations")
+    st.markdown("## 🚀 Keyword Emergence Analysis")
+    st.info("Identify new and rapidly growing keywords in recent years")
     
-    keyword_cols = [col for col in df.columns if 'keyword' in col.lower()]
-    title_cols = [col for col in df.columns if 'title' in col.lower()]
-    abstract_cols = [col for col in df.columns if 'abstract' in col.lower()]
+    if 'Year' not in df.columns:
+        st.warning("⚠️ Year information required for emergence analysis")
+    else:
+        try:
+            with st.spinner("Analyzing keyword emergence..."):
+                min_docs = st.slider("Minimum recent documents", 1, 20, 5)
+                
+                emerging_df = analyze_keyword_emergence(
+                    df,
+                    selected_source,
+                    year_column='Year',
+                    min_docs=min_docs
+                )
+                
+                if emerging_df is not None and len(emerging_df) > 0:
+                    # Split by status
+                    new_keywords = emerging_df[emerging_df['status'] == 'New']
+                    growing_keywords = emerging_df[emerging_df['status'] == 'Growing']
+                    
+                    col1, col2 = st.columns(2)
+                    
+                    with col1:
+                        st.markdown("### 🆕 New Keywords")
+                        st.caption("Keywords appearing only in recent years")
+                        
+                        if len(new_keywords) > 0:
+                            fig = px.bar(
+                                new_keywords.head(15),
+                                x='recent_count',
+                                y='keyword',
+                                orientation='h',
+                                title='Frequency of New Keywords'
+                            )
+                            fig.update_layout(yaxis={'categoryorder': 'total ascending'})
+                            st.plotly_chart(fig, use_container_width=True)
+                        else:
+                            st.info("No new keywords found")
+                    
+                    with col2:
+                        st.markdown("### 📈 Growing Keywords")
+                        st.caption("Keywords with increasing frequency")
+                        
+                        if len(growing_keywords) > 0:
+                            fig = px.bar(
+                                growing_keywords.head(15),
+                                x='emergence_score',
+                                y='keyword',
+                                orientation='h',
+                                title='Emergence Score (Growth Rate × Frequency)',
+                                color='emergence_score',
+                                color_continuous_scale='Viridis'
+                            )
+                            fig.update_layout(yaxis={'categoryorder': 'total ascending'})
+                            st.plotly_chart(fig, use_container_width=True)
+                        else:
+                            st.info("No growing keywords found")
+                    
+                    # Full table
+                    st.markdown("### 📋 Complete Emergence Report")
+                    st.dataframe(emerging_df, use_container_width=True, hide_index=True)
+                    
+                else:
+                    st.warning("⚠️ Insufficient data for emergence analysis")
+                    
+        except Exception as e:
+            st.error(f"❌ Error in emergence analysis: {str(e)}")
+
+# ============= TAB 4: WORD CLOUDS =============
+with tab4:
+    st.markdown("## ☁️ Word Cloud Visualization")
     
-    text_source = st.selectbox(
-        "Select text source for word cloud",
-        ["Keywords"] + (["Titles"] if title_cols else []) + (["Abstracts"] if abstract_cols else [])
-    )
-    
-    col1, col2, col3 = st.columns(3)
+    col1, col2 = st.columns([1, 2])
     
     with col1:
         max_words = st.slider("Maximum words", 50, 300, 100)
+        width = st.slider("Width (px)", 400, 1200, 800)
+        height = st.slider("Height (px)", 300, 800, 400)
     
     with col2:
-        width = st.slider("Width", 400, 1200, 800)
-    
-    with col3:
-        height = st.slider("Height", 300, 800, 400)
-    
-    if st.button("🎨 Generate Word Cloud", type="primary"):
-        with st.spinner("Creating word cloud..."):
-            
-            # Collect text
-            if text_source == "Keywords" and keyword_cols:
-                text = ' '.join(df[keyword_cols[0]].dropna().astype(str))
-            elif text_source == "Titles" and title_cols:
-                text = ' '.join(df[title_cols[0]].dropna().astype(str))
-            elif text_source == "Abstracts" and abstract_cols:
-                text = ' '.join(df[abstract_cols[0]].dropna().astype(str))
-            else:
-                st.error("Selected text source not available")
-                st.stop()
-            
-            if not text.strip():
-                st.warning("No text data available for word cloud")
-            else:
-                # Create word cloud
-                wordcloud = WordCloud(
-                    width=width,
-                    height=height,
-                    max_words=max_words,
-                    background_color='white',
-                    colormap='viridis',
-                    relative_scaling=0.5,
-                    min_font_size=10
-                ).generate(text)
-                
-                # Display
-                fig, ax = plt.subplots(figsize=(width/100, height/100))
-                ax.imshow(wordcloud, interpolation='bilinear')
-                ax.axis('off')
-                st.pyplot(fig)
-                
-                st.success(f"✅ Word cloud generated from {len(text.split())} words")
+        if selected_source in df.columns:
+            try:
+                with st.spinner("Generating word cloud..."):
+                    # Combine all text
+                    texts = df[selected_source].dropna()
+                    combined_text = ' '.join([preprocess_text(str(t)) for t in texts])
+                    
+                    if remove_stops:
+                        combined_text = remove_stopwords(combined_text, custom_stopwords)
+                    
+                    if combined_text:
+                        # Generate word cloud
+                        wordcloud = WordCloud(
+                            width=width,
+                            height=height,
+                            max_words=max_words,
+                            background_color='white',
+                            colormap='viridis',
+                            relative_scaling=0.5
+                        ).generate(combined_text)
+                        
+                        # Display
+                        fig, ax = plt.subplots(figsize=(12, 6))
+                        ax.imshow(wordcloud, interpolation='bilinear')
+                        ax.axis('off')
+                        st.pyplot(fig)
+                        
+                    else:
+                        st.warning("⚠️ No text available for word cloud")
+                        
+            except Exception as e:
+                st.error(f"❌ Error generating word cloud: {str(e)}")
 
-with tab4:
-    st.markdown("## 🎯 Semantic Patterns & Insights")
+# ============= TAB 5: KEYWORD TRENDS =============
+with tab5:
+    st.markdown("## 📈 Keyword Trends Over Time")
     
-    st.info("🔍 Advanced semantic analysis of your research corpus")
-    
-    # Find text columns
-    keyword_cols = [col for col in df.columns if 'keyword' in col.lower()]
-    title_cols = [col for col in df.columns if 'title' in col.lower()]
-    abstract_cols = [col for col in df.columns if 'abstract' in col.lower()]
-    
-    analysis_type = st.selectbox(
-        "Select Analysis Type",
-        [
-            "Bigram Analysis (2-word phrases)",
-            "Trigram Analysis (3-word phrases)",
-            "Keyword Co-occurrence Patterns",
-            "Emerging Topics Detection"
-        ]
-    )
-    
-    if "Bigram" in analysis_type or "Trigram" in analysis_type:
-        n = 2 if "Bigram" in analysis_type else 3
+    if 'Year' not in df.columns:
+        st.warning("⚠️ Year information required for trend analysis")
+    else:
+        # Get top keywords
+        texts = df[selected_source].dropna()
         
-        text_source = st.radio(
-            "Analyze from",
-            ["Titles"] if title_cols else [] + ["Abstracts"] if abstract_cols else []
+        all_words = []
+        for text in texts:
+            text = preprocess_text(str(text))
+            text = remove_stopwords(text, custom_stopwords)
+            all_words.extend(text.split())
+        
+        word_freq = Counter(all_words)
+        top_words = [w for w, c in word_freq.most_common(50) if len(w) > 3]
+        
+        # Select keywords
+        selected_keywords = st.multiselect(
+            "Select keywords to track",
+            top_words[:30],
+            default=top_words[:5],
+            max_selections=10
         )
         
-        if st.button("🔍 Analyze", type="primary"):
-            with st.spinner(f"Extracting {n}-grams..."):
-                
-                if text_source == "Titles" and title_cols:
-                    text_series = df[title_cols[0]]
-                elif text_source == "Abstracts" and abstract_cols:
-                    text_series = df[abstract_cols[0]]
-                else:
-                    st.error("Selected source not available")
-                    st.stop()
-                
-                ngrams = extract_ngrams(text_series, n)
-                
-                if not ngrams:
-                    st.warning(f"No {n}-grams found")
-                else:
-                    top_ngrams = list(ngrams.items())[:50]
-                    
-                    st.success(f"✅ Found {len(ngrams):,} unique {n}-grams")
-                    
-                    # Visualization
-                    fig = px.bar(
-                        x=[count for _, count in top_ngrams[:30]],
-                        y=[ngram.title() for ngram, _ in top_ngrams[:30]],
-                        orientation='h',
-                        title=f'Top 30 {n}-grams',
-                        labels={'x': 'Frequency', 'y': f'{n}-gram'}
-                    )
-                    fig.update_layout(yaxis={'categoryorder': 'total ascending'}, height=700)
-                    st.plotly_chart(fig, use_container_width=True)
-                    
-                    # Table
-                    st.dataframe(
-                        pd.DataFrame(top_ngrams[:50], columns=[f'{n}-gram', 'Frequency']),
-                        use_container_width=True,
-                        hide_index=True
-                    )
-    
-    elif "Co-occurrence" in analysis_type:
-        if not keyword_cols:
-            st.error("❌ No keyword column found")
-        else:
-            st.info("Shows which keywords frequently appear together")
+        if selected_keywords:
+            # Calculate trends
+            trend_data = []
             
-            keyword_col = keyword_cols[0]
+            for year in sorted(df['Year'].dropna().unique()):
+                year_df = df[df['Year'] == year]
+                year_texts = year_df[selected_source].dropna()
+                
+                year_combined = ' '.join([preprocess_text(str(t)) for t in year_texts])
+                year_combined = remove_stopwords(year_combined, custom_stopwords)
+                year_words = year_combined.split()
+                year_counter = Counter(year_words)
+                
+                for keyword in selected_keywords:
+                    count = year_counter.get(keyword, 0)
+                    trend_data.append({
+                        'Year': int(year),
+                        'Keyword': keyword,
+                        'Frequency': count
+                    })
             
-            if st.button("🔍 Analyze Patterns", type="primary"):
-                with st.spinner("Analyzing co-occurrence patterns..."):
+            trend_df = pd.DataFrame(trend_data)
+            
+            # Visualization
+            fig = px.line(
+                trend_df,
+                x='Year',
+                y='Frequency',
+                color='Keyword',
+                title='Keyword Frequency Over Time',
+                markers=True
+            )
+            fig.update_layout(height=500)
+            st.plotly_chart(fig, use_container_width=True)
+            
+            # Growth analysis
+            st.markdown("### 📊 Growth Analysis")
+            
+            growth_data = []
+            for keyword in selected_keywords:
+                keyword_df = trend_df[trend_df['Keyword'] == keyword]
+                
+                if len(keyword_df) >= 2:
+                    first_count = keyword_df.iloc[0]['Frequency']
+                    last_count = keyword_df.iloc[-1]['Frequency']
                     
-                    # Build co-occurrence matrix
-                    cooccur = {}
-                    
-                    for keywords in df[keyword_col].dropna():
-                        if isinstance(keywords, str):
-                            kw_list = [k.strip().lower() for k in keywords.replace(';', ',').split(',')]
-                            kw_list = [k for k in kw_list if k]
-                            
-                            for i, kw1 in enumerate(kw_list):
-                                for kw2 in kw_list[i+1:]:
-                                    pair = tuple(sorted([kw1, kw2]))
-                                    cooccur[pair] = cooccur.get(pair, 0) + 1
-                    
-                    # Get top pairs
-                    top_pairs = sorted(cooccur.items(), key=lambda x: x[1], reverse=True)[:30]
-                    
-                    if not top_pairs:
-                        st.warning("No co-occurring keyword pairs found")
+                    if first_count > 0:
+                        growth_pct = ((last_count - first_count) / first_count) * 100
                     else:
-                        st.success(f"✅ Found {len(cooccur):,} keyword pairs")
-                        
-                        # Visualization
-                        pair_labels = [f"{kw1.title()} ↔ {kw2.title()}" for (kw1, kw2), _ in top_pairs]
-                        pair_counts = [count for _, count in top_pairs]
-                        
-                        fig = px.bar(
-                            x=pair_counts,
-                            y=pair_labels,
-                            orientation='h',
-                            title='Top 30 Keyword Co-occurrences',
-                            labels={'x': 'Co-occurrence Count', 'y': 'Keyword Pair'}
-                        )
-                        fig.update_layout(yaxis={'categoryorder': 'total ascending'}, height=700)
-                        st.plotly_chart(fig, use_container_width=True)
-    
-    else:  # Emerging topics
-        st.info("🚧 Advanced topic modeling coming soon!")
-        st.markdown("""
-        **Planned Features:**
-        - LDA (Latent Dirichlet Allocation) topic modeling
-        - Dynamic topic evolution tracking
-        - Topic-document relationships
-        - Automated topic labeling
-        - Topic similarity analysis
-        """)
+                        growth_pct = 100 if last_count > 0 else 0
+                    
+                    growth_data.append({
+                        'Keyword': keyword,
+                        'First Year': int(keyword_df.iloc[0]['Year']),
+                        'First Count': first_count,
+                        'Last Year': int(keyword_df.iloc[-1]['Year']),
+                        'Last Count': last_count,
+                        'Growth %': growth_pct
+                    })
+            
+            if growth_data:
+                growth_df = pd.DataFrame(growth_data)
+                st.dataframe(growth_df, use_container_width=True, hide_index=True)
+        else:
+            st.info("👆 Select keywords to analyze trends")
 
-# Export options
+# Footer
 st.markdown("---")
-st.markdown("### 💾 Export Analysis Results")
-
-col1, col2 = st.columns(2)
-
-with col1:
-    st.button("📥 Download Keyword Data (CSV)", disabled=True, use_container_width=True)
-
-with col2:
-    st.button("📊 Download Trend Analysis (Excel)", disabled=True, use_container_width=True)
+st.caption("💡 Semantic Analysis • Advanced NLP for Research Analytics")
