@@ -39,11 +39,19 @@ with st.sidebar:
     st.markdown("---")
     st.info(f"📊 Showing {len(df)} records")
 
-# Main analytics sections
+# Get data type from session
+data_type = st.session_state.get('data_type', 'publication')
+
+# Adapt label
+if data_type == 'patent':
+    data_label = "📜 Patents"
+else:
+    data_label = "📚 Publications"
+
 tab1, tab2, tab3, tab4, tab5 = st.tabs([
-    "📈 Overview", 
-    "📚 Publications", 
-    "👥 Authors", 
+    "📈 Overview",
+    data_label,  # ← Adapts automatically!
+    "👥 Authors",
     "🏷️ Keywords",
     "📊 Citations"
 ])
