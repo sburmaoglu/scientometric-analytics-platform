@@ -5,8 +5,22 @@ import plotly.graph_objects as go
 from collections import Counter
 
 st.set_page_config(page_title="Descriptive Analytics", page_icon="📊", layout="wide")
-
+# Add this after imports, before title
+def add_navigation():
+    """Back and Home buttons"""
+    col1, col2, col3 = st.columns([1, 1, 4])
+    
+    with col1:
+        if st.button("← Back", key="nav_back", use_container_width=True):
+            st.switch_page("app.py")
+    
+    with col2:
+        if st.button("🏠 Home", key="nav_home", use_container_width=True, type="primary"):
+            st.switch_page("app.py")
+    
+    st.markdown("---")
 st.title("📊 Descriptive Analytics")
+add_navigation()
 st.markdown("Comprehensive statistical overview and trend analysis")
 
 # Check if data is uploaded
@@ -48,10 +62,17 @@ if data_type == 'patent':
 else:
     data_label = "📚 Publications"
 
+# Adaptive tab name based on data type
+data_type = st.session_state.get('data_type', 'publication')
+if data_type == 'patent':
+    data_label = "📜 Patents"
+else:
+    data_label = "📚 Publications"
+
 tab1, tab2, tab3, tab4, tab5 = st.tabs([
-    "📈 Overview",
-    data_label,  # ← Adapts automatically!
-    "👥 Authors",
+    "📈 Overview", 
+    data_label,  # ← NOW ADAPTIVE!
+    "👥 Authors", 
     "🏷️ Keywords",
     "📊 Citations"
 ])
@@ -369,23 +390,26 @@ with tab5:
 
 # Export section
 st.markdown("---")
-st.markdown("### 💾 Export Analysis")
+st.markdown("### 🔄 Quick Navigation")
 
-col1, col2, col3 = st.columns(3)
+col1, col2, col3, col4, col5 = st.columns(5)
 
 with col1:
-    if st.button("📥 Download Filtered Data", use_container_width=True):
-        csv = df.to_csv(index=False)
-        st.download_button(
-            label="Download CSV",
-            data=csv,
-            file_name="filtered_data.csv",
-            mime="text/csv",
-            use_container_width=True
-        )
+    if st.button("📊 Descriptive", key="footer_1", use_container_width=True):
+        st.switch_page("pages/1_📊_Descriptive_Analytics.py")
 
 with col2:
-    st.button("📊 Generate Report (Premium)", disabled=True, use_container_width=True)
+    if st.button("🌐 Network", key="footer_2", use_container_width=True):
+        st.switch_page("pages/2_🌐_Network_Analysis.py")
 
 with col3:
-    st.button("🔬 Advanced Analytics →", type="primary", use_container_width=True, disabled=True)
+    if st.button("💡 Semantic", key="footer_3", use_container_width=True):
+        st.switch_page("pages/3_💡_Semantic_Analysis.py")
+
+with col4:
+    if st.button("📈 TRL", key="footer_4", use_container_width=True):
+        st.switch_page("pages/4_📈_TRL_Analysis.py")
+
+with col5:
+    if st.button("🔬 Advanced", key="footer_5", use_container_width=True):
+        st.switch_page("pages/5_🔬_Advanced_Analytics.py")
