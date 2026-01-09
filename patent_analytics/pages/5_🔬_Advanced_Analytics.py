@@ -328,7 +328,7 @@ with tab2:
         
         elif prediction_type == "Citation Growth Prediction":
             if not citation_cols:
-                st.error("❌ Citation data required for this analysis")
+                st.error("""❌ Citation data required for this analysis""")
             else:
                 st.info("🚧 Advanced citation prediction models coming soon!")
                 st.markdown("""
