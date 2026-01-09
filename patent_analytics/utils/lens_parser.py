@@ -324,15 +324,21 @@ def preprocess_lens_data(df: pd.DataFrame, data_type: str = None) -> Tuple[pd.Da
     return processed_df, metadata
 
 
-def validate_lens_format(df: pd.DataFrame) -> Tuple[bool, str, float]:
+def validate_lens_format(df: pd.DataFrame) -> Dict:
     """
     Validate if dataframe is from lens.org
     
     Returns:
-        Tuple of (is_valid, data_type, confidence)
+        Dictionary with: is_valid, data_type, confidence, source, message
     """
-    if len(df) == 0:
-        return False, None, 0.0
+    if df is None or len(df) == 0:
+        return {
+            'is_valid': False,
+            'data_type': 'unknown',
+            'confidence': 0.0,
+            'source': 'unknown',
+            'message': 'Empty dataframe'
+        }
     
     # Check for lens.org specific indicators
     columns_lower = [col.lower() for col in df.columns]
@@ -344,15 +350,30 @@ def validate_lens_format(df: pd.DataFrame) -> Tuple[bool, str, float]:
     data_type, confidence = detect_data_type(df)
     
     # Validation rules
-    min_columns = 5  # Lens.org exports typically have many columns
-    min_confidence = 0.3  # At least 30% match
+    min_columns = 5
+    min_confidence = 0.3
     
     is_valid = (
         len(df.columns) >= min_columns and
         (confidence >= min_confidence or has_lens_id)
     )
     
-    return is_valid, data_type, confidence
+    # Determine source
+    source = 'lens.org' if has_lens_id else 'compatible'
+    
+    # Create message
+    if is_valid:
+        message = f"Valid {data_type} data detected (confidence: {confidence:.1%})"
+    else:
+        message = f"Data format not recognized. Confidence: {confidence:.1%}"
+    
+    return {
+        'is_valid': is_valid,
+        'data_type': data_type,
+        'confidence': confidence,
+        'source': source,
+        'message': message
+    }
 
 
 def get_available_fields(df: pd.DataFrame, data_type: str) -> Dict[str, bool]:
