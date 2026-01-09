@@ -69,7 +69,7 @@ tab1, tab2, tab3, tab4 = st.tabs(["📄 Journal Articles", "📊 BibTeX", "📑 
 with tab1:
     st.markdown("### Recommended Citation for Journal Articles")
     
-    citation_journal = """Burmaoglu, S. (2024). Patent & Publication Analytics Platform: A Comprehensive 
+    citation_journal = """Burmaoglu, S. (2026). Patent & Publication Analytics Platform: A Comprehensive 
 Free Tool for Research Analysis. Retrieved from https://scholar.google.com/citations?user=HTleNI8AAAAJ"""
     
     st.code(citation_journal, language="text")
@@ -113,19 +113,19 @@ with tab2:
 
 with tab3:
     st.markdown("### APA Format (7th Edition)")
-    st.code("""Burmaoglu, S. (2024). Patent & Publication Analytics Platform [Computer software]. 
+    st.code("""Burmaoglu, S. (2026). Patent & Publication Analytics Platform [Computer software]. 
 Retrieved from https://scholar.google.com/citations?user=HTleNI8AAAAJ&hl=en&oi=ao""", language="text")
     
     st.markdown("### IEEE Format")
-    st.code("""S. Burmaoglu, "Patent & Publication Analytics Platform," 2024. 
+    st.code("""S. Burmaoglu, "Patent & Publication Analytics Platform," 2026. 
 [Online]. Available: https://scholar.google.com/citations?user=HTleNI8AAAAJ""", language="text")
     
     st.markdown("### Chicago Format")
-    st.code("""Burmaoglu, Serhat. 2024. "Patent & Publication Analytics Platform." Computer Software. 
+    st.code("""Burmaoglu, Serhat. 2026. "Patent & Publication Analytics Platform." Computer Software. 
 https://scholar.google.com/citations?user=HTleNI8AAAAJ&hl=en&oi=ao.""", language="text")
     
     st.markdown("### Harvard Format")
-    st.code("""Burmaoglu, S. (2024) Patent & Publication Analytics Platform. Available at: 
+    st.code("""Burmaoglu, S. (2026) Patent & Publication Analytics Platform. Available at: 
 https://scholar.google.com/citations?user=HTleNI8AAAAJ (Accessed: [date]).""", language="text")
 
 with tab4:
@@ -133,7 +133,7 @@ with tab4:
     
     st.markdown("**For Methods Section:**")
     acknowledgment_methods = """Data analysis was performed using the Patent & Publication Analytics Platform 
-(Burmaoglu, 2024), a free comprehensive tool for research analytics."""
+(Burmaoglu, 2026), a free comprehensive tool for research analytics."""
     
     st.code(acknowledgment_methods, language="text")
     
@@ -145,7 +145,7 @@ providing the Patent & Publication Analytics Platform used in this research."""
     
     st.markdown("**For Figure Captions:**")
     acknowledgment_fig = """Figure X: [Your caption]. Analysis performed using the Patent & 
-Publication Analytics Platform (Burmaoglu, 2024)."""
+Publication Analytics Platform (Burmaoglu, 2026)."""
     
     st.code(acknowledgment_fig, language="text")
 
@@ -319,7 +319,7 @@ Together, we can make research analytics more accessible to everyone!
 st.markdown("---")
 st.markdown("""
 <div style='text-align: center; padding: 1rem; color: #666; font-size: 0.85rem;'>
-    © 2024-2026 Prof. Dr. Serhat Burmaoglu - All Rights Reserved<br/>
+    © 2026 Prof. Dr. Serhat Burmaoglu - All Rights Reserved<br/>
     <a href='https://scholar.google.com/citations?user=HTleNI8AAAAJ&hl=en&oi=ao' target='_blank'>Google Scholar</a> | 
     <a href='https://www.scopus.com/authid/detail.uri?authorId=53163130500' target='_blank'>Scopus</a><br/>
     Patent & Publication Analytics Platform v3.0
