@@ -14,8 +14,23 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 st.set_page_config(page_title="Semantic Analysis", page_icon="💡", layout="wide")
+# Add this after imports, before title
+def add_navigation():
+    """Back and Home buttons"""
+    col1, col2, col3 = st.columns([1, 1, 4])
+    
+    with col1:
+        if st.button("← Back", key="nav_back", use_container_width=True):
+            st.switch_page("app.py")
+    
+    with col2:
+        if st.button("🏠 Home", key="nav_home", use_container_width=True, type="primary"):
+            st.switch_page("app.py")
+    
+    st.markdown("---")
 
 st.title("💡 Semantic Analysis")
+add_navigation()  # ← ADD THIS LINE RIGHT AFTER TITLE
 st.markdown("Advanced text mining and topic modeling")
 
 # Check if data is uploaded
@@ -622,5 +637,28 @@ with tab5:
             st.info("👆 Select keywords to analyze trends")
 
 # Footer
+# Add at very end of file, before any closing
 st.markdown("---")
-st.caption("💡 Semantic Analysis • Advanced NLP for Research Analytics")
+st.markdown("### 🔄 Quick Navigation")
+
+col1, col2, col3, col4, col5 = st.columns(5)
+
+with col1:
+    if st.button("📊 Descriptive", key="footer_1", use_container_width=True):
+        st.switch_page("pages/1_📊_Descriptive_Analytics.py")
+
+with col2:
+    if st.button("🌐 Network", key="footer_2", use_container_width=True):
+        st.switch_page("pages/2_🌐_Network_Analysis.py")
+
+with col3:
+    if st.button("💡 Semantic", key="footer_3", use_container_width=True):
+        st.switch_page("pages/3_💡_Semantic_Analysis.py")
+
+with col4:
+    if st.button("📈 TRL", key="footer_4", use_container_width=True):
+        st.switch_page("pages/4_📈_TRL_Analysis.py")
+
+with col5:
+    if st.button("🔬 Advanced", key="footer_5", use_container_width=True):
+        st.switch_page("pages/5_🔬_Advanced_Analytics.py")
