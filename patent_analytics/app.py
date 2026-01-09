@@ -1,3 +1,9 @@
+"""
+ENHANCED MAIN PAGE (app.py)
+Beautiful, informative landing page with patent/publication explanations
+Replace your current app.py content with this
+"""
+
 import streamlit as st
 import pandas as pd
 from pathlib import Path
@@ -10,34 +16,134 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# Custom CSS
+# Enhanced CSS with modern styling
 def load_css():
     st.markdown("""
     <style>
+    /* Main header styling */
     .main-header {
-        font-size: 3rem;
+        font-size: 3.5rem;
         font-weight: bold;
-        color: #1f77b4;
+        background: linear-gradient(120deg, #1f77b4 0%, #ff7f0e 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
         text-align: center;
-        padding: 1rem 0;
+        padding: 1.5rem 0;
+        margin-bottom: 0.5rem;
     }
+    
     .sub-header {
-        font-size: 1.2rem;
-        color: #666;
+        font-size: 1.3rem;
+        color: #555;
         text-align: center;
-        margin-bottom: 2rem;
+        margin-bottom: 1rem;
+        font-weight: 300;
     }
+    
+    /* Feature boxes */
     .feature-box {
-        background-color: #f0f2f6;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 2rem;
+        border-radius: 15px;
+        margin: 1rem 0;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        transition: transform 0.3s ease;
+    }
+    
+    .feature-box:hover {
+        transform: translateY(-5px);
+    }
+    
+    .info-card {
+        background: white;
         padding: 1.5rem;
         border-radius: 10px;
+        border-left: 4px solid #1f77b4;
         margin: 1rem 0;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
     }
-    .metric-container {
-        background-color: white;
+    
+    .stats-box {
+        background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+        color: white;
+        padding: 1.5rem;
+        border-radius: 10px;
+        text-align: center;
+        box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+    }
+    
+    .module-card {
+        background: white;
+        padding: 1.5rem;
+        border-radius: 10px;
+        border: 2px solid #e0e0e0;
+        margin: 0.5rem 0;
+        transition: all 0.3s ease;
+    }
+    
+    .module-card:hover {
+        border-color: #1f77b4;
+        box-shadow: 0 5px 20px rgba(31, 119, 180, 0.3);
+        transform: translateY(-3px);
+    }
+    
+    .upload-section {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        padding: 2rem;
+        border-radius: 15px;
+        color: white;
+        margin: 2rem 0;
+    }
+    
+    /* Buttons */
+    .stButton>button {
+        border-radius: 10px;
+        font-weight: 600;
+        transition: all 0.3s ease;
+    }
+    
+    /* Info boxes */
+    .highlight-box {
+        background: #fff3cd;
+        border-left: 4px solid #ffc107;
         padding: 1rem;
         border-radius: 5px;
-        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        margin: 1rem 0;
+    }
+    
+    .success-box {
+        background: #d4edda;
+        border-left: 4px solid #28a745;
+        padding: 1rem;
+        border-radius: 5px;
+        margin: 1rem 0;
+    }
+    
+    /* Animated gradient background */
+    .gradient-bg {
+        background: linear-gradient(-45deg, #ee7752, #e73c7e, #23a6d5, #23d5ab);
+        background-size: 400% 400%;
+        animation: gradient 15s ease infinite;
+        padding: 2rem;
+        border-radius: 15px;
+        color: white;
+    }
+    
+    @keyframes gradient {
+        0% { background-position: 0% 50%; }
+        50% { background-position: 100% 50%; }
+        100% { background-position: 0% 50%; }
+    }
+    
+    /* Copyright styling */
+    .copyright-box {
+        text-align: center;
+        padding: 1rem;
+        background: #f8f9fa;
+        border-radius: 10px;
+        margin: 1rem 0;
+        border: 2px solid #e0e0e0;
     }
     </style>
     """, unsafe_allow_html=True)
@@ -51,495 +157,536 @@ def initialize_session_state():
     if 'file_name' not in st.session_state:
         st.session_state.file_name = None
     if 'data_source' not in st.session_state:
-        st.session_state.data_source = None  # 'lens.org' or None
+        st.session_state.data_source = None
     if 'data_type' not in st.session_state:
-        st.session_state.data_type = None  # 'publication' or 'patent'
+        st.session_state.data_type = None
+
+def show_welcome_section():
+    """Beautiful welcome section with explanations"""
+    
+    # Hero section
+    st.markdown("""
+    <div class="gradient-bg" style="margin: 2rem 0;">
+        <h2 style="color: white; text-align: center; margin-bottom: 1rem;">
+            🚀 Welcome to Advanced Research Analytics
+        </h2>
+        <p style="color: white; text-align: center; font-size: 1.2rem; margin-bottom: 0;">
+            Transform your patent and publication data into actionable research insights
+        </p>
+    </div>
+    """, unsafe_allow_html=True)
+    
+    # What is this platform?
+    st.markdown("## 🎯 What is This Platform?")
+    
+    col1, col2 = st.columns(2)
+    
+    with col1:
+        st.markdown("""
+        <div class="info-card">
+            <h3>📜 Patent Analysis</h3>
+            <p><strong>Patents</strong> are legal documents that grant exclusive rights to inventions. 
+            Analyzing patents helps researchers:</p>
+            <ul>
+                <li>🔍 <strong>Track technological trends</strong> in specific fields</li>
+                <li>🏢 <strong>Identify key inventors</strong> and organizations</li>
+                <li>💡 <strong>Discover innovation patterns</strong> across industries</li>
+                <li>🌍 <strong>Map technological landscapes</strong> globally</li>
+                <li>🔗 <strong>Find collaboration opportunities</strong></li>
+            </ul>
+            <p><em>Example: Analyzing AI patents to identify emerging technologies</em></p>
+        </div>
+        """, unsafe_allow_html=True)
+    
+    with col2:
+        st.markdown("""
+        <div class="info-card">
+            <h3>📚 Publication Analysis</h3>
+            <p><strong>Scientific publications</strong> (journal articles, conference papers) represent 
+            research outputs. Analyzing publications helps:</p>
+            <ul>
+                <li>📊 <strong>Measure research impact</strong> through citations</li>
+                <li>🎓 <strong>Identify influential researchers</strong> and institutions</li>
+                <li>🔬 <strong>Discover research trends</strong> and hot topics</li>
+                <li>🤝 <strong>Map collaboration networks</strong> in academia</li>
+                <li>📈 <strong>Track knowledge evolution</strong> over time</li>
+            </ul>
+            <p><em>Example: Analyzing climate change research to find key themes</em></p>
+        </div>
+        """, unsafe_allow_html=True)
+    
+    st.markdown("---")
+    
+    # Why use this platform?
+    st.markdown("## 💎 Why Use This Platform?")
+    
+    col1, col2, col3 = st.columns(3)
+    
+    with col1:
+        st.markdown("""
+        <div class="stats-box">
+            <h2 style="color: white;">🆓</h2>
+            <h3 style="color: white;">100% FREE</h3>
+            <p style="color: white; margin: 0;">No subscriptions, no hidden fees. 
+            Professional analytics accessible to all researchers.</p>
+        </div>
+        """, unsafe_allow_html=True)
+    
+    with col2:
+        st.markdown("""
+        <div class="stats-box" style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);">
+            <h2 style="color: white;">🎓</h2>
+            <h3 style="color: white;">ACADEMIC-GRADE</h3>
+            <p style="color: white; margin: 0;">Statistical methods with proper citations. 
+            Publication-ready results.</p>
+        </div>
+        """, unsafe_allow_html=True)
+    
+    with col3:
+        st.markdown("""
+        <div class="stats-box" style="background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);">
+            <h2 style="color: white;">⚡</h2>
+            <h3 style="color: white;">EASY TO USE</h3>
+            <p style="color: white; margin: 0;">Upload your data, click analyze. 
+            No coding required.</p>
+        </div>
+        """, unsafe_allow_html=True)
+
+def show_analytics_modules():
+    """Show available analytics modules with descriptions"""
+    
+    st.markdown("## 🛠️ Analytics Modules")
+    st.markdown("### Comprehensive tools for deep research insights")
+    
+    modules = [
+        {
+            "icon": "📊",
+            "name": "Descriptive Analytics",
+            "description": "Get comprehensive statistics, trends, and distributions",
+            "features": [
+                "Publication/Patent counts over time",
+                "Citation statistics and rankings",
+                "Author/Inventor analysis",
+                "Keyword frequency analysis",
+                "Top cited works identification"
+            ]
+        },
+        {
+            "icon": "🌐",
+            "name": "Network Analysis",
+            "description": "Visualize collaboration patterns and relationships",
+            "features": [
+                "Author collaboration networks",
+                "Keyword co-occurrence networks",
+                "Community detection",
+                "Centrality analysis",
+                "Network metrics (density, clustering)"
+            ]
+        },
+        {
+            "icon": "💡",
+            "name": "Semantic Analysis",
+            "description": "Advanced text mining and topic discovery",
+            "features": [
+                "N-gram extraction (unigrams, bigrams, trigrams)",
+                "Topic modeling (LDA-style)",
+                "Keyword emergence analysis",
+                "Word clouds and visualizations",
+                "Trend tracking over time"
+            ]
+        },
+        {
+            "icon": "📈",
+            "name": "TRL Assessment",
+            "description": "Technology Readiness Level evaluation",
+            "features": [
+                "Automatic TRL classification (1-9)",
+                "Patent maturity assessment",
+                "Technology portfolio analysis",
+                "Development stage identification",
+                "Investment readiness scoring"
+            ]
+        },
+        {
+            "icon": "🔬",
+            "name": "Advanced Analytics",
+            "description": "Statistical testing and predictive modeling",
+            "features": [
+                "Impact metrics (h-index, i10, i100)",
+                "K-Means clustering with elbow method",
+                "Comparative analysis",
+                "Statistical hypothesis testing",
+                "Citation prediction models"
+            ]
+        }
+    ]
+    
+    # Display modules in grid
+    cols = st.columns(2)
+    for idx, module in enumerate(modules):
+        with cols[idx % 2]:
+            st.markdown(f"""
+            <div class="module-card">
+                <h3>{module['icon']} {module['name']}</h3>
+                <p style="color: #666; margin-bottom: 1rem;">{module['description']}</p>
+                <p style="margin: 0;"><strong>Key Features:</strong></p>
+                <ul style="margin-top: 0.5rem; margin-bottom: 0;">
+                    {''.join([f'<li>{feature}</li>' for feature in module['features'][:3]])}
+                </ul>
+            </div>
+            """, unsafe_allow_html=True)
+
+def show_data_sources():
+    """Show supported data sources"""
+    
+    st.markdown("## 📁 Supported Data Sources")
+    
+    col1, col2 = st.columns(2)
+    
+    with col1:
+        st.markdown("""
+        <div class="success-box">
+            <h3>✅ Lens.org (Recommended)</h3>
+            <p>Free, comprehensive patent and scholarly database</p>
+            <ul>
+                <li><strong>Patents:</strong> 130M+ global patents</li>
+                <li><strong>Publications:</strong> 260M+ scholarly works</li>
+                <li><strong>Export:</strong> CSV format with rich metadata</li>
+            </ul>
+            <p><strong>How to get data:</strong></p>
+            <ol>
+                <li>Visit <a href="https://www.lens.org" target="_blank">lens.org</a></li>
+                <li>Search for your topic (e.g., "artificial intelligence patents")</li>
+                <li>Filter results (by year, country, etc.)</li>
+                <li>Click "Export" → Select CSV format</li>
+                <li>Download and upload here!</li>
+            </ol>
+        </div>
+        """, unsafe_allow_html=True)
+    
+    with col2:
+        st.markdown("""
+        <div class="highlight-box">
+            <h3>⚠️ Data Requirements</h3>
+            <p><strong>Your CSV file should contain:</strong></p>
+            <ul>
+                <li><strong>Essential:</strong> Title, Year, Citations</li>
+                <li><strong>Recommended:</strong> Authors/Inventors, Keywords</li>
+                <li><strong>Optional:</strong> Abstract, DOI, Classifications</li>
+            </ul>
+            <p><strong>Platform automatically:</strong></p>
+            <ul>
+                <li>✅ Detects publication vs. patent data</li>
+                <li>✅ Maps column names to standard format</li>
+                <li>✅ Generates missing fields when possible</li>
+                <li>✅ Validates data quality</li>
+            </ul>
+            <p style="margin: 0;"><em>Don't worry about exact column names - our intelligent parser handles variations!</em></p>
+        </div>
+        """, unsafe_allow_html=True)
+
+def show_workflow():
+    """Show typical workflow"""
+    
+    st.markdown("## 🔄 How It Works")
+    
+    st.markdown("""
+    <div style="display: flex; justify-content: space-around; margin: 2rem 0;">
+        <div style="text-align: center; flex: 1;">
+            <div style="background: #1f77b4; color: white; width: 60px; height: 60px; border-radius: 50%; 
+                        display: flex; align-items: center; justify-content: center; margin: 0 auto 1rem; 
+                        font-size: 1.5rem; font-weight: bold;">1</div>
+            <h4>📤 Upload Data</h4>
+            <p>Upload your CSV file from Lens.org or compatible source</p>
+        </div>
+        <div style="text-align: center; flex: 1;">
+            <div style="background: #ff7f0e; color: white; width: 60px; height: 60px; border-radius: 50%; 
+                        display: flex; align-items: center; justify-content: center; margin: 0 auto 1rem; 
+                        font-size: 1.5rem; font-weight: bold;">2</div>
+            <h4>🔍 Preprocess</h4>
+            <p>Platform automatically validates and prepares your data</p>
+        </div>
+        <div style="text-align: center; flex: 1;">
+            <div style="background: #2ca02c; color: white; width: 60px; height: 60px; border-radius: 50%; 
+                        display: flex; align-items: center; justify-content: center; margin: 0 auto 1rem; 
+                        font-size: 1.5rem; font-weight: bold;">3</div>
+            <h4>📊 Analyze</h4>
+            <p>Explore 5 powerful analytics modules with visualizations</p>
+        </div>
+        <div style="text-align: center; flex: 1;">
+            <div style="background: #d62728; color: white; width: 60px; height: 60px; border-radius: 50%; 
+                        display: flex; align-items: center; justify-content: center; margin: 0 auto 1rem; 
+                        font-size: 1.5rem; font-weight: bold;">4</div>
+            <h4>💾 Export</h4>
+            <p>Download reports, charts, and statistics for your research</p>
+        </div>
+    </div>
+    """, unsafe_allow_html=True)
+
+def show_use_cases():
+    """Show typical use cases"""
+    
+    st.markdown("## 🎯 Who Uses This Platform?")
+    
+    use_cases = {
+        "🎓 PhD Researchers": [
+            "Literature review and gap analysis",
+            "Identifying research trends in their field",
+            "Finding potential collaborators",
+            "Preparing systematic reviews"
+        ],
+        "🏢 R&D Managers": [
+            "Technology landscape mapping",
+            "Competitor patent analysis",
+            "Innovation trend tracking",
+            "Investment decision support"
+        ],
+        "📚 University Libraries": [
+            "Research output assessment",
+            "Bibliometric analysis",
+            "Institutional benchmarking",
+            "Identifying emerging topics"
+        ],
+        "💼 Policy Makers": [
+            "Science & technology policy analysis",
+            "Regional innovation assessment",
+            "Funding impact evaluation",
+            "Strategic planning"
+        ]
+    }
+    
+    cols = st.columns(2)
+    for idx, (user_type, uses) in enumerate(use_cases.items()):
+        with cols[idx % 2]:
+            st.markdown(f"""
+            <div class="info-card">
+                <h3>{user_type}</h3>
+                <ul>
+                    {''.join([f'<li>{use}</li>' for use in uses])}
+                </ul>
+            </div>
+            """, unsafe_allow_html=True)
 
 def main():
     load_css()
     initialize_session_state()
     
-    # Header
-    st.markdown('<div class="main-header">📊 Patent & Publication Analytics</div>', unsafe_allow_html=True)
-    st.markdown('<div class="sub-header">Transform your research data into actionable insights</div>', unsafe_allow_html=True)
+    # Main header
+    st.markdown('<div class="main-header">📊 Patent & Publication Analytics Platform</div>', unsafe_allow_html=True)
+    st.markdown('<div class="sub-header">🚀 Transform Research Data into Actionable Insights</div>', unsafe_allow_html=True)
     
-    # Copyright and attribution
+    # Copyright section
     st.markdown("""
-    <div style='text-align: center; padding: 0.5rem; font-size: 0.85rem; color: #666;'>
-        © 2024-2026 <strong>Prof. Dr. Serhat Burmaoglu</strong> | 
-        <a href='https://scholar.google.com/citations?user=HTleNI8AAAAJ&hl=en&oi=ao' target='_blank'>Google Scholar</a> | 
-        <a href='https://www.scopus.com/authid/detail.uri?authorId=53163130500' target='_blank'>Scopus</a>
+    <div class="copyright-box">
+        <p style="margin: 0; color: #666;">
+            © 2024-2026 <strong>Prof. Dr. Serhat Burmaoglu</strong> | 
+            <a href='https://scholar.google.com/citations?user=HTleNI8AAAAJ&hl=en&oi=ao' target='_blank'>Google Scholar</a> | 
+            <a href='https://www.scopus.com/authid/detail.uri?authorId=53163130500' target='_blank'>Scopus</a>
+        </p>
     </div>
     """, unsafe_allow_html=True)
     
-    st.markdown("---")
-    
-    # Sidebar
-    with st.sidebar:
-        st.image("https://via.placeholder.com/150x50/1f77b4/ffffff?text=Patent+Analytics", use_container_width=True)
-        
-        # Copyright info
-        st.markdown("""
-        <div style='text-align: center; font-size: 0.75rem; padding: 0.5rem; background-color: #f0f2f6; border-radius: 5px; margin-bottom: 1rem;'>
-            <strong>Developed by</strong><br/>
-            <a href='https://scholar.google.com/citations?user=HTleNI8AAAAJ&hl=en&oi=ao' target='_blank'>
-            Prof. Dr. Serhat Burmaoglu</a>
-        </div>
-        """, unsafe_allow_html=True)
+    # Show informational sections if no data uploaded
+    if not st.session_state.data_uploaded:
+        # Welcome and explanations
+        show_welcome_section()
         
         st.markdown("---")
         
-        st.success("🆓 100% Free Platform")
-        st.caption("Advanced patent & publication analytics for researchers")
+        # Analytics modules
+        show_analytics_modules()
         
-        # Citation reminder
+        st.markdown("---")
+        
+        # Data sources
+        show_data_sources()
+        
+        st.markdown("---")
+        
+        # Workflow
+        show_workflow()
+        
+        st.markdown("---")
+        
+        # Use cases
+        show_use_cases()
+        
+        st.markdown("---")
+    
+    # Upload section (always visible)
+    st.markdown("""
+    <div class="upload-section">
+        <h2 style="color: white; text-align: center; margin-bottom: 1rem;">
+            📤 Upload Your Data to Get Started
+        </h2>
+        <p style="color: white; text-align: center; font-size: 1.1rem; margin-bottom: 0;">
+            Upload a CSV file from Lens.org or compatible source
+        </p>
+    </div>
+    """, unsafe_allow_html=True)
+    
+    # File upload section
+    col1, col2, col3 = st.columns([1, 2, 1])
+    
+    with col2:
+        uploaded_file = st.file_uploader(
+            "Choose your CSV file",
+            type=['csv'],
+            help="Upload a CSV file exported from Lens.org or similar source"
+        )
+        
+        if uploaded_file is not None:
+            # Process the file (your existing upload logic here)
+            # Import the lens_parser
+            try:
+                from utils.lens_parser import preprocess_lens_data, validate_lens_format
+                
+                with st.spinner("📊 Processing your data..."):
+                    # Read CSV
+                    df = pd.read_csv(uploaded_file)
+                    
+                    # Validate
+                    validation = validate_lens_format(df)
+                    
+                    if validation['is_valid']:
+                        # Preprocess
+                        processed_df, report = preprocess_lens_data(df)
+                        
+                        # Save to session state
+                        st.session_state.df = processed_df
+                        st.session_state.data_uploaded = True
+                        st.session_state.file_name = uploaded_file.name
+                        st.session_state.data_source = validation.get('source', 'unknown')
+                        st.session_state.data_type = validation.get('data_type', 'unknown')
+                        
+                        # Success message
+                        st.success(f"✅ Successfully loaded {len(processed_df)} records!")
+                        
+                        # Show preprocessing report
+                        with st.expander("📋 View Preprocessing Report"):
+                            st.json(report)
+                        
+                        # Show data preview
+                        st.markdown("### 👀 Data Preview")
+                        st.dataframe(processed_df.head(10), use_container_width=True)
+                        
+                        # Quick stats
+                        col1, col2, col3, col4 = st.columns(4)
+                        with col1:
+                            st.metric("Total Records", f"{len(processed_df):,}")
+                        with col2:
+                            if 'Year' in processed_df.columns:
+                                years = processed_df['Year'].dropna()
+                                if len(years) > 0:
+                                    st.metric("Year Range", f"{int(years.min())}-{int(years.max())}")
+                        with col3:
+                            if 'Citations' in processed_df.columns:
+                                st.metric("Total Citations", f"{int(processed_df['Citations'].sum()):,}")
+                        with col4:
+                            st.metric("Data Type", validation.get('data_type', 'Unknown').title())
+                        
+                        # Navigation to analytics
+                        st.markdown("---")
+                        st.markdown("### 🎯 Ready to Analyze!")
+                        st.info("👈 Use the sidebar to navigate to analytics modules")
+                        
+                        # Quick navigation buttons
+                        st.markdown("#### Or click below to start:")
+                        col1, col2, col3, col4, col5 = st.columns(5)
+                        
+                        with col1:
+                            if st.button("📊 Descriptive", use_container_width=True, type="primary"):
+                                st.switch_page("pages/1_📊_Descriptive_Analytics.py")
+                        with col2:
+                            if st.button("🌐 Network", use_container_width=True):
+                                st.switch_page("pages/2_🌐_Network_Analysis.py")
+                        with col3:
+                            if st.button("💡 Semantic", use_container_width=True):
+                                st.switch_page("pages/3_💡_Semantic_Analysis.py")
+                        with col4:
+                            if st.button("📈 TRL", use_container_width=True):
+                                st.switch_page("pages/4_📈_TRL_Analysis.py")
+                        with col5:
+                            if st.button("🔬 Advanced", use_container_width=True):
+                                st.switch_page("pages/5_🔬_Advanced_Analytics.py")
+                    
+                    else:
+                        st.error("❌ File validation failed")
+                        st.write(validation.get('message', 'Unknown error'))
+                        
+            except Exception as e:
+                st.error(f"❌ Error processing file: {str(e)}")
+                with st.expander("Technical Details"):
+                    st.code(str(e))
+    
+    # Sidebar
+    with st.sidebar:
+        st.markdown("### 🎯 Quick Start Guide")
+        
+        st.markdown("""
+        1. **Get Your Data**
+           - Visit [Lens.org](https://lens.org)
+           - Search your topic
+           - Export as CSV
+        
+        2. **Upload Here**
+           - Use the upload button
+           - Wait for processing
+        
+        3. **Explore Analytics**
+           - 5 powerful modules
+           - Interactive visualizations
+           - Downloadable reports
+        """)
+        
+        st.markdown("---")
+        
+        st.markdown("### 📚 Resources")
+        st.markdown("""
+        - [User Guide](https://github.com/yourusername/patent-analytics)
+        - [Video Tutorial](https://youtube.com)
+        - [Example Datasets](https://lens.org)
+        - [FAQ](https://github.com)
+        """)
+        
+        st.markdown("---")
+        
+        st.markdown("""
+        <div style='text-align: center; font-size: 0.75rem; padding: 1rem; background-color: #f0f2f6; border-radius: 10px;'>
+            <strong>Developed by</strong><br/>
+            <a href='https://scholar.google.com/citations?user=HTleNI8AAAAJ&hl=en&oi=ao' target='_blank'>
+            Prof. Dr. Serhat Burmaoglu</a>
+            <br/><br/>
+            <strong>Version:</strong> 3.0<br/>
+            <strong>License:</strong> Free for Research
+        </div>
+        """, unsafe_allow_html=True)
+        
         with st.expander("📖 How to Cite"):
             st.markdown("""
             **If you use this platform in your research, please cite:**
             
             Burmaoglu, S. (2024). Patent & Publication Analytics Platform. 
-            
-            [BibTeX and other formats available in LICENSE.md]
+            Available at: https://your-app-url.streamlit.app
             """)
-        
-        st.markdown("---")
-        
-        # Navigation info
-        st.markdown("### 📍 Navigation")
-        st.markdown("""
-        - **Home**: Upload data and overview
-        - **📊 Descriptive Analytics**: Basic statistics
-        - **🌐 Network Analysis**: Collaboration & citation networks
-        - **💡 Semantic Analysis**: Topic modeling & trends
-        - **📈 TRL Analysis**: Technology readiness levels
-        - **🔬 Advanced Analytics**: Predictive & comparative
-        - **ℹ️ About & Citation**: How to cite this work
-        """)
-        
-        st.markdown("---")
-        
-        # Data status
-        if st.session_state.data_uploaded:
-            st.success(f"✅ Data loaded")
-            st.info(f"📁 **File:** {st.session_state.file_name}")
-            if st.session_state.data_source:
-                st.info(f"🌐 **Source:** {st.session_state.data_source}")
-            if st.session_state.data_type:
-                st.info(f"📑 **Type:** {st.session_state.data_type.title()}")
-            
-            if st.button("🗑️ Clear Data"):
-                st.session_state.data_uploaded = False
-                st.session_state.df = None
-                st.session_state.file_name = None
-                st.session_state.data_source = None
-                st.session_state.data_type = None
-                st.rerun()
-        else:
-            st.warning("⚠️ No data uploaded")
-    
-    # Main content
-    if not st.session_state.data_uploaded:
-        show_upload_section()
-    else:
-        show_data_overview()
 
-def show_upload_section():
-    """Display file upload interface"""
-    st.markdown("## 📤 Upload Your Data")
-    
-    # Important warning box
-    st.warning("""
-    ⚠️ **IMPORTANT: Data Source Requirements**
-    
-    This platform is **specifically designed for lens.org data exports**. 
-    
-    ✅ **Supported:**
-    - CSV files exported from **lens.org** (Publications OR Patents)
-    - Standard lens.org export format
-    
-    ❌ **Not Supported (Yet):**
-    - Scopus, Web of Science, PubMed, or other databases
-    - Custom CSV formats
-    - Excel files (.xlsx)
-    
-    📚 **How to Export from lens.org:**
-    1. Go to [lens.org](https://lens.org)
-    2. Perform your search
-    3. Click "Export" → "CSV"
-    4. Upload the downloaded CSV file here
-    """)
-    
-    col1, col2 = st.columns([2, 1])
-    
-    with col1:
-        st.markdown("""
-        ### Getting Started
-        
-        1. Export your data from **lens.org** in CSV format
-        2. Upload the file using the uploader below
-        3. System will automatically detect if it's Publications or Patents
-        4. Data will be preprocessed and standardized
-        5. Start analyzing with powerful analytics tools!
-        
-        **What You Can Analyze:**
-        - 📊 Descriptive statistics
-        - 🌐 Collaboration networks
-        - 🔬 Citation networks
-        - 💡 Semantic analysis & topic modeling
-        - 📈 Technology Readiness Level (TRL) analysis
-        - 🏷️ Keyword co-occurrence networks
-        - 📅 Temporal trends and patterns
-        """)
-        
-        # File uploader
-        uploaded_file = st.file_uploader(
-            "Choose a CSV file from lens.org",
-            type=['csv'],
-            help="Upload your lens.org export file in CSV format"
-        )
-        
-        if uploaded_file is not None:
-            try:
-                with st.spinner("🔍 Analyzing and preprocessing file..."):
-                    # Import parser
-                    from utils.lens_parser import (
-                        validate_lens_format, 
-                        preprocess_lens_data,
-                        get_available_fields
-                    )
-                    
-                    # Read CSV
-                    df_raw = pd.read_csv(uploaded_file)
-                    
-                    # Validate format
-                    is_valid, data_type, confidence = validate_lens_format(df_raw)
-                    
-                    if not is_valid:
-                        st.error("""
-                        ❌ **This doesn't appear to be a lens.org file!**
-                        
-                        The uploaded file doesn't match the expected lens.org format.
-                        
-                        **Please ensure:**
-                        - File is exported directly from lens.org
-                        - Export format is CSV (not Excel or other)
-                        - File hasn't been modified after export
-                        - File contains at least 5 columns
-                        
-                        **Detection confidence:** {:.0%}
-                        
-                        **Need help?** Check the lens.org export guide above.
-                        """.format(confidence))
-                        st.stop()
-                    
-                    # Preprocess data
-                    df_processed, metadata = preprocess_lens_data(df_raw, data_type)
-                    
-                    # Check available fields
-                    available_fields = get_available_fields(df_raw, data_type)
-                    
-                    # Store in session state
-                    st.session_state.df = df_processed
-                    st.session_state.df_raw = df_raw  # Keep original
-                    st.session_state.file_name = uploaded_file.name
-                    st.session_state.data_uploaded = True
-                    st.session_state.data_source = 'lens.org'
-                    st.session_state.data_type = data_type
-                    st.session_state.metadata = metadata
-                    st.session_state.available_fields = available_fields
-                    
-                    # Success messages
-                    st.success(f"✅ Successfully loaded: {uploaded_file.name}")
-                    
-                    col_a, col_b, col_c = st.columns(3)
-                    with col_a:
-                        st.info(f"📑 **Type:** {data_type.title()}")
-                    with col_b:
-                        st.info(f"🎯 **Confidence:** {confidence:.0%}")
-                    with col_c:
-                        st.info(f"📊 **Records:** {len(df_processed):,}")
-                    
-                    # Show preprocessing info
-                    with st.expander("🔧 Preprocessing Details"):
-                        st.markdown("### Mapped Columns")
-                        if metadata['mapped_columns']:
-                            for std_name, orig_name in metadata['mapped_columns'].items():
-                                st.write(f"✅ **{std_name}** ← `{orig_name}`")
-                        else:
-                            st.warning("No columns were mapped")
-                        
-                        if metadata['generated_columns']:
-                            st.markdown("### Generated Columns")
-                            for gen_col in metadata['generated_columns']:
-                                st.write(f"🔧 {gen_col}")
-                        
-                        st.markdown("### Available Fields")
-                        available_count = sum(available_fields.values())
-                        total_count = len(available_fields)
-                        st.write(f"**{available_count}/{total_count}** standard fields found")
-                        
-                        col1, col2 = st.columns(2)
-                        with col1:
-                            st.markdown("**✅ Available:**")
-                            for field, available in available_fields.items():
-                                if available:
-                                    st.write(f"  • {field.title()}")
-                        
-                        with col2:
-                            st.markdown("**❌ Missing:**")
-                            for field, available in available_fields.items():
-                                if not available:
-                                    st.write(f"  • {field.title()}")
-                    
-                    # Auto-refresh to show overview
-                    st.rerun()
-                
-            except Exception as e:
-                st.error(f"❌ Error loading file: {str(e)}")
-                st.exception(e)  # Show full traceback for debugging
-                st.info("Please ensure your file is a valid lens.org CSV export.")
-    
-    with col2:
-        st.markdown("### 💡 Tips")
-        st.markdown("""
-        **File Requirements:**
-        - Format: CSV only
-        - Source: lens.org only
-        - Size: Up to 200MB
-        - Encoding: UTF-8
-        
-        **Data Quality:**
-        - Check for complete exports
-        - Verify date ranges
-        - Review field completeness
-        
-        **First Time?**
-        - Start with a small dataset (100-1000 records)
-        - Test all analytics features
-        - Then upload your full dataset
-        
-        **For Patents:**
-        - System will use "Inventors" as "Authors"
-        - Keywords extracted from title/abstract if needed
-        
-        **For Publications:**
-        - Standard author fields detected
-        - Keywords from various sources
-        """)
-        
-        st.markdown("### 📖 Resources")
-        st.markdown("""
-        - [Lens.org Guide](https://lens.org)
-        - [Export Tutorial](https://docs.lens.org)
-        - [Sample Datasets](https://lens.org/lens/search/scholar)
-        """)
-
-
-def show_data_overview():
-    """Display overview of uploaded data"""
-    df = st.session_state.df
-    metadata = st.session_state.get('metadata', {})
-    data_type = st.session_state.get('data_type', 'unknown')
-    
-    st.markdown("## 📊 Data Overview")
-    
-    # Show data type badge
-    if data_type == 'patent':
-        st.info("📜 **Data Type:** Patents")
-    else:
-        st.info("📚 **Data Type:** Publications")
-    
-    # Quick stats
-    col1, col2, col3, col4 = st.columns(4)
-    
-    with col1:
-        st.metric("Total Records", f"{len(df):,}")
-    
-    with col2:
-        st.metric("Columns", len(df.columns))
-    
-    with col3:
-        # Try to find year column (standardized)
-        if 'Year' in df.columns:
-            year_range = f"{int(df['Year'].min())}-{int(df['Year'].max())}"
-            st.metric("Year Range", year_range)
-        else:
-            st.metric("Year Range", "N/A")
-    
-    with col4:
-        # Calculate completeness
-        completeness = (1 - df.isnull().sum().sum() / (len(df) * len(df.columns))) * 100
-        st.metric("Data Completeness", f"{completeness:.1f}%")
-    
-    st.markdown("---")
-    
-    # Show standardized columns info
-    if metadata:
-        with st.expander("🔧 Data Preprocessing Summary", expanded=False):
-            col1, col2 = st.columns(2)
-            
-            with col1:
-                st.markdown("### ✅ Standardized Columns")
-                if 'mapped_columns' in metadata and metadata['mapped_columns']:
-                    for std_col in metadata['mapped_columns'].keys():
-                        st.write(f"• {std_col}")
-                else:
-                    st.write("None")
-            
-            with col2:
-                st.markdown("### 🔧 Generated Columns")
-                if 'generated_columns' in metadata and metadata['generated_columns']:
-                    for gen_col in metadata['generated_columns']:
-                        st.write(f"• {gen_col}")
-                else:
-                    st.write("None")
-    
-    # Tabs for different views
-    tab1, tab2, tab3 = st.tabs(["📋 Data Preview", "📊 Column Info", "🔍 Data Quality"])
-    
-    with tab1:
-        st.markdown("### First 10 Rows (Standardized View)")
-        
-        # Show standardized columns first
-        standard_cols = ['Title', 'Authors', 'Year', 'Citations', 'Keywords', 'Abstract']
-        available_standard = [col for col in standard_cols if col in df.columns]
-        
-        if available_standard:
-            st.dataframe(df[available_standard].head(10), use_container_width=True)
-        else:
-            st.dataframe(df.head(10), use_container_width=True)
-        
-        with st.expander("View All Columns"):
-            st.write(f"**Standardized columns ({len(available_standard)}):**")
-            st.write(available_standard)
-            st.write(f"**All columns ({len(df.columns)}):**")
-            st.write(list(df.columns))
-    
-    with tab2:
-        st.markdown("### Column Information")
-        
-        # Focus on standardized columns
-        if available_standard:
-            col_info = pd.DataFrame({
-                'Column': available_standard,
-                'Type': [df[col].dtype for col in available_standard],
-                'Non-Null Count': [df[col].count() for col in available_standard],
-                'Null Count': [df[col].isnull().sum() for col in available_standard],
-                'Unique Values': [df[col].nunique() for col in available_standard]
-            })
-            
-            st.dataframe(col_info, use_container_width=True)
-        
-        with st.expander("All Columns Details"):
-            col_info_all = pd.DataFrame({
-                'Column': df.columns,
-                'Type': df.dtypes.values,
-                'Non-Null Count': df.count().values,
-                'Null Count': df.isnull().sum().values,
-                'Unique Values': df.nunique().values
-            })
-            st.dataframe(col_info_all, use_container_width=True)
-    
-    with tab3:
-        st.markdown("### Data Quality Report")
-        
-        col1, col2 = st.columns(2)
-        
-        with col1:
-            st.markdown("#### Missing Values (Standardized Columns)")
-            if available_standard:
-                missing = df[available_standard].isnull().sum()
-                missing = missing[missing > 0].sort_values(ascending=False)
-                
-                if len(missing) > 0:
-                    st.dataframe(pd.DataFrame({
-                        'Column': missing.index,
-                        'Missing': missing.values,
-                        'Percentage': (missing.values / len(df) * 100).round(2)
-                    }), use_container_width=True, hide_index=True)
-                else:
-                    st.success("✅ No missing values in standardized columns!")
-            else:
-                st.info("No standardized columns available")
-        
-        with col2:
-            st.markdown("#### Duplicate Records")
-            duplicates = df.duplicated().sum()
-            st.metric("Duplicate Rows", duplicates)
-            
-            if duplicates > 0:
-                st.warning(f"⚠️ Found {duplicates} duplicate records")
-                if st.button("Remove Duplicates"):
-                    st.session_state.df = df.drop_duplicates()
-                    st.success("✅ Duplicates removed!")
-                    st.rerun()
-            else:
-                st.success("✅ No duplicates found")
-    
-    st.markdown("---")
-    
-    # Quick actions
-    st.markdown("### 🚀 Available Analytics Tools")
-    
-    col1, col2, col3 = st.columns(3)
-    
-    with col1:
-        st.markdown("#### 📊 Descriptive")
-        if st.button("Basic Statistics", type="primary", use_container_width=True):
-            st.switch_page("pages/1_📊_Descriptive_Analytics.py")
-        st.caption("Overview, trends, distributions")
-    
-    with col2:
-        st.markdown("#### 🌐 Networks")
-        if st.button("Network Analysis", use_container_width=True):
-            st.switch_page("pages/2_🌐_Network_Analysis.py")
-        st.caption("Collaboration & citation networks")
-    
-    with col3:
-        st.markdown("#### 💡 Semantic")
-        if st.button("Topic Modeling", use_container_width=True):
-            st.switch_page("pages/3_💡_Semantic_Analysis.py")
-        st.caption("Keywords, topics, trends")
-    
-    col4, col5, col6 = st.columns(3)
-    
-    with col4:
-        st.markdown("#### 📈 TRL")
-        if st.button("TRL Analysis", use_container_width=True):
-            st.switch_page("pages/4_📈_TRL_Analysis.py")
-        st.caption("Technology readiness levels")
-    
-    with col5:
-        st.markdown("#### 🎯 Advanced")
-        if st.button("Advanced Analytics", use_container_width=True):
-            st.switch_page("pages/5_🔬_Advanced_Analytics.py")
-        st.caption("Predictive & comparative analysis")
-    
-    with col6:
-        st.markdown("#### 💾 Export")
-        if st.button("Download Data", use_container_width=True):
-            csv = df.to_csv(index=False)
-            st.download_button(
-                label="📥 Download CSV",
-                data=csv,
-                file_name=f"cleaned_{st.session_state.file_name}",
-                mime="text/csv",
-                use_container_width=True
-            )
-
-if __name__ == "__main__":
-    main()
-    
     # Footer
     st.markdown("---")
     st.markdown("""
-    <div style='text-align: center; padding: 1rem; color: #666; font-size: 0.85rem;'>
-        <strong>Patent & Publication Analytics Platform</strong> v3.0<br/>
-        © 2024-2026 Prof. Dr. Serhat Burmaoglu - All Rights Reserved<br/>
-        <a href='https://scholar.google.com/citations?user=HTleNI8AAAAJ&hl=en&oi=ao' target='_blank'>Google Scholar</a> | 
-        <a href='https://www.scopus.com/authid/detail.uri?authorId=53163130500' target='_blank'>Scopus</a><br/>
-        <br/>
-        <em>Free for research and educational use • Citation required for publications</em><br/>
-        See LICENSE.md for citation formats
+    <div style='text-align: center; color: #666; font-size: 0.85rem; padding: 2rem 0;'>
+        <p><strong>© 2024-2026 Prof. Dr. Serhat Burmaoglu</strong></p>
+        <p>
+            Patent & Publication Analytics Platform v3.0 | 
+            Free for Research & Education | 
+            Citation Required for Publications
+        </p>
+        <p style='margin-top: 1rem;'>
+            Built with ❤️ using Streamlit | 
+            <a href='https://github.com' target='_blank'>Source Code</a> | 
+            <a href='mailto:contact@example.com'>Contact</a>
+        </p>
     </div>
     """, unsafe_allow_html=True)
+
+if __name__ == "__main__":
+    main()
