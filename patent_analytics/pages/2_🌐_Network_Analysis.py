@@ -76,87 +76,112 @@ def create_keyword_network(df, keyword_col, min_cooccurrence=2):
     
     return G
 
-def network_to_plotly(G, title="Network", layout_type='spring'):
-    """Convert NetworkX graph to Plotly figure"""
+def network_to_plotly(G, title, layout='spring'):
+    """Convert NetworkX graph to Plotly figure - FIXED VERSION"""
+    
     if len(G.nodes()) == 0:
-        return None
+        fig = go.Figure()
+        fig.add_annotation(
+            text="No network data available",
+            xref="paper", yref="paper",
+            x=0.5, y=0.5, showarrow=False
+        )
+        return fig
     
-    # Calculate layout
-    if layout_type == 'spring':
-        pos = nx.spring_layout(G, k=0.5, iterations=50)
-    elif layout_type == 'circular':
-        pos = nx.circular_layout(G)
-    elif layout_type == 'kamada':
-        pos = nx.kamada_kawai_layout(G)
-    else:
-        pos = nx.spring_layout(G)
-    
-    # Create edge traces
-    edge_trace = go.Scatter(
-        x=[], y=[],
-        line=dict(width=0.5, color='#888'),
-        hoverinfo='none',
-        mode='lines'
-    )
-    
-    for edge in G.edges():
-        x0, y0 = pos[edge[0]]
-        x1, y1 = pos[edge[1]]
-        edge_trace['x'] += tuple([x0, x1, None])
-        edge_trace['y'] += tuple([y0, y1, None])
-    
-    # Create node traces
-    node_trace = go.Scatter(
-        x=[], y=[],
-        mode='markers+text',
-        hoverinfo='text',
-        marker=dict(
-            showscale=True,
-            colorscale='YlOrRd',
-            size=[],
-            color=[],
-            colorbar=dict(
-                thickness=15,
-                title='Connections',
-                xanchor='left',
-                titleside='right'
-            ),
-            line=dict(width=2, color='white')
-        ),
-        text=[],
-        textposition="top center",
-        textfont=dict(size=10)
-    )
-    
-    for node in G.nodes():
-        x, y = pos[node]
-        node_trace['x'] += tuple([x])
-        node_trace['y'] += tuple([y])
+    try:
+        # Calculate layout
+        if layout == 'spring':
+            pos = nx.spring_layout(G, k=0.5, iterations=50)
+        elif layout == 'circular':
+            pos = nx.circular_layout(G)
+        elif layout == 'kamada_kawai':
+            try:
+                pos = nx.kamada_kawai_layout(G)
+            except:
+                pos = nx.spring_layout(G)
+        else:
+            pos = nx.spring_layout(G)
         
-        # Node size based on degree
-        degree = G.degree(node)
-        node_trace['marker']['size'] += tuple([10 + degree * 2])
-        node_trace['marker']['color'] += tuple([degree])
+        # Edge trace
+        edge_trace = go.Scatter(
+            x=[], y=[],
+            line=dict(width=0.5, color='#888'),
+            hoverinfo='none',
+            mode='lines'
+        )
         
-        # Node label (truncate if too long)
-        label = str(node)
-        if len(label) > 20:
-            label = label[:17] + "..."
-        node_trace['text'] += tuple([label])
-    
-    # Create figure
-    fig = go.Figure(data=[edge_trace, node_trace],
-                   layout=go.Layout(
-                       title=title,
-                       showlegend=False,
-                       hovermode='closest',
-                       margin=dict(b=0, l=0, r=0, t=40),
-                       xaxis=dict(showgrid=False, zeroline=False, showticklabels=False),
-                       yaxis=dict(showgrid=False, zeroline=False, showticklabels=False),
-                       height=600
-                   ))
-    
-    return fig
+        for edge in G.edges():
+            x0, y0 = pos[edge[0]]
+            x1, y1 = pos[edge[1]]
+            edge_trace['x'] += tuple([x0, x1, None])
+            edge_trace['y'] += tuple([y0, y1, None])
+        
+        # Build node properties
+        node_x = []
+        node_y = []
+        node_text = []
+        node_size = []
+        node_color = []
+        
+        for node in G.nodes():
+            x, y = pos[node]
+            node_x.append(x)
+            node_y.append(y)
+            
+            degree = G.degree(node)
+            node_size.append(10 + degree * 2)
+            node_color.append(degree)
+            node_text.append(f"{node}<br>Connections: {degree}")
+        
+        # Node trace - FIXED
+        node_trace = go.Scatter(
+            x=node_x,
+            y=node_y,
+            mode='markers+text',
+            hoverinfo='text',
+            text=[str(node)[:20] for node in G.nodes()],
+            hovertext=node_text,
+            textposition="top center",
+            textfont=dict(size=8),
+            marker=dict(
+                size=node_size,
+                color=node_color,
+                colorscale='YlOrRd',
+                showscale=True,
+                colorbar=dict(
+                    title="Connections",
+                    thickness=15,
+                    xanchor='left'
+                ),
+                line=dict(width=1, color='white')
+            )
+        )
+        
+        # Create figure
+        fig = go.Figure(
+            data=[edge_trace, node_trace],
+            layout=go.Layout(
+                title=title,
+                showlegend=False,
+                hovermode='closest',
+                margin=dict(b=0, l=0, r=0, t=40),
+                xaxis=dict(showgrid=False, zeroline=False, showticklabels=False),
+                yaxis=dict(showgrid=False, zeroline=False, showticklabels=False),
+                height=600
+            )
+        )
+        
+        return fig
+        
+    except Exception as e:
+        fig = go.Figure()
+        fig.add_annotation(
+            text=f"Error: {str(e)[:100]}",
+            xref="paper", yref="paper",
+            x=0.5, y=0.5, showarrow=False,
+            font=dict(size=12, color='red')
+        )
+        return fig
 
 def calculate_network_metrics(G):
     """Calculate key network metrics"""
