@@ -443,3 +443,37 @@ def debug_preprocessing(df: pd.DataFrame, processed_df: pd.DataFrame, metadata: 
         print(f"  {col}: {'✅' if exists else '❌'} | Data: {'✅' if has_data else '❌'}")
     
     print("=" * 50)
+def verify_preprocessing(processed_df: pd.DataFrame) -> Dict[str, bool]:
+    """
+    Verify that all required columns exist and have data
+    """
+    checks = {
+        'has_title': 'Title' in processed_df.columns,
+        'has_year': 'Year' in processed_df.columns,
+        'has_citations': 'Citations' in processed_df.columns,
+        'has_authors': 'Authors' in processed_df.columns,
+        'has_keywords': 'Keywords' in processed_df.columns,
+        
+        'title_populated': False,
+        'year_populated': False,
+        'citations_populated': False,
+        'authors_populated': False,
+        'keywords_populated': False
+    }
+    
+    if checks['has_title']:
+        checks['title_populated'] = processed_df['Title'].notna().sum() > 0
+    
+    if checks['has_year']:
+        checks['year_populated'] = processed_df['Year'].notna().sum() > 0
+    
+    if checks['has_citations']:
+        checks['citations_populated'] = processed_df['Citations'].notna().sum() > 0
+    
+    if checks['has_authors']:
+        checks['authors_populated'] = processed_df['Authors'].notna().sum() > 0
+    
+    if checks['has_keywords']:
+        checks['keywords_populated'] = processed_df['Keywords'].notna().sum() > 0
+    
+    return checks
